@@ -1,0 +1,193 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#e9ecef;
+}
+
+.container{
+  min-height:100vh;
+  display:flex;
+}
+
+.left-side{
+  width:85%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+
+  background:
+linear-gradient(
+  to bottom right,
+
+  rgba(247, 248, 248, 0.45),
+
+  rgba(154, 168, 161, 0.35),
+
+  rgba(255,255,255,0.10)
+
+),
+url('/images/isu4.jfif');
+
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.overlay{
+  width:150%;
+  padding:330px;
+  text-align:center;
+}
+
+.top-logo{
+  width:500px;
+  max-width:100%;
+  display:block;
+  margin:-300px auto 0 auto;
+
+  background:transparent;
+
+  object-fit:contain;
+}
+
+
+.left-side h1{
+  font-size:55px;
+  margin-bottom:10px;
+}
+
+.left-side p{
+  font-size:18px;
+  margin-bottom:40px;
+}
+
+.left-info{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.info-box{
+  background:rgba(255,255,255,0.15);
+  padding:18px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  gap:15px;
+  font-size:18px;
+}
+
+.info-box i{
+  font-size:22px;
+}
+
+/* RIGHT SIDE */
+
+.right-side{
+  width:55%;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px;
+}
+
+#loginSection,
+#registerSection{
+  width:100%;
+  max-width:450px;
+}
+
+.form-top{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+.form-logo{
+  width:400px;
+  margin-bottom:20px;
+}
+
+.form-top h2{
+  font-size:35px;
+  color:#155309;
+  margin-bottom:10px;
+}
+
+.form-top p{
+  color:#5b5a5a;
+}
+
+.input-group{
+  margin-bottom:20px;
+}
+
+.input-group input,
+.input-group select{
+  width:100%;
+  padding:18px;
+  border:1px solid #ccc;
+  border-radius:0px;
+  font-size:17px;
+  outline:none;
+}
+
+.show-pass{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:20px;
+  color:#555;
+}
+
+.login-btn,
+.register-btn{
+  width:40%;
+  padding:5px;
+  border:none;
+  border-radius:0px;
+  background:#00c853;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.login-btn:hover,
+.register-btn:hover{
+  background:#00b248;
+}
+
+.bottom-link{
+  margin-top:25px;
+  text-align:center;
+  color:#666;
+}
+
+.bottom-link span{
+  color:#00a651;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+  .left-side{
+    display:none;
+  }
+
+  .right-side{
+    width:100%;
+  }
+}
