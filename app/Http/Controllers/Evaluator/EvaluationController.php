@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../../models/EvaluatorVote.php';
 require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/EvaluationGroup.php';
 require_once __DIR__ . '/../../../models/EvaluationCriteria.php';
+require_once __DIR__ . '/../../../models/Notification.php'; 
 
 class EvaluationController extends \EvaluatorBaseController
 {
@@ -18,6 +19,7 @@ class EvaluationController extends \EvaluatorBaseController
     private $groupModel;
     private $criteriaModel;
     private $db;
+    private $notificationModel;
 
     public function __construct()
     {
@@ -33,6 +35,7 @@ class EvaluationController extends \EvaluatorBaseController
         $this->proposalModel = new \Proposal($pdo);
         $this->groupModel = new \EvaluationGroup($pdo);
         $this->criteriaModel = new \EvaluationCriteria($pdo);
+        $this->notificationModel = new \Notification($pdo);
     }
 
     // Evaluator dashboard – list assigned proposals pending evaluation
@@ -182,7 +185,56 @@ class EvaluationController extends \EvaluatorBaseController
 
         // Save vote
         $this->voteModel->saveVote($evaluator_id, $submission_id, $report_type, $vote, $comments);
+// === NOTIFY ADMINS + EXTENSIONIST ===
+        if ($report_type === 'proposal') {
+            $submission = $this->submissionModel->find($submission_id);
+            if ($submission) {
+                // Notify extensionist
+                $this->notificationModel->create(
+                    $submission['user_id'],
+                    'evaluation_submitted',
+                    'Your Proposal Has Been Evaluated',
+                    'Evaluator ' . ($_SESSION['user_name'] ?? 'Unknown') . ' voted: ' . ucfirst($vote),
+                    '/extensionist/submissions'
+                );
+            }
+        } elseif ($report_type === 'progress') {
+            $stmt = $this->db->prepare("SELECT user_id, submission_id FROM progress_reports WHERE id = ?");
+            $stmt->execute([$submission_id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($row) {
+                $this->notificationModel->create(
+                    $row['user_id'],
+                    'evaluation_submitted',
+                    'Your Progress Report Has Been Evaluated',
+                    'Evaluator ' . ($_SESSION['user_name'] ?? 'Unknown') . ' voted: ' . ucfirst($vote),
+                    '/extensionist/submissions'
+                );
+            }
+        } elseif ($report_type === 'terminal') {
+            $stmt = $this->db->prepare("SELECT user_id, submission_id FROM terminal_reports WHERE id = ?");
+            $stmt->execute([$submission_id]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($row) {
+                $this->notificationModel->create(
+                    $row['user_id'],
+                    'evaluation_submitted',
+                    'Your Terminal Report Has Been Evaluated',
+                    'Evaluator ' . ($_SESSION['user_name'] ?? 'Unknown') . ' voted: ' . ucfirst($vote),
+                    '/extensionist/submissions'
+                );
+            }
+        }
 
+        // Notify admins
+        $adminIds = $this->notificationModel->getAdmins();
+        $this->notificationModel->createBulk(
+            $adminIds,
+            'evaluation_submitted',
+            'Evaluation Submitted',
+            ($_SESSION['user_name'] ?? 'Unknown') . ' evaluated a ' . $report_type . ' report (vote: ' . ucfirst($vote) . ').',
+            '/admin/monitoring'
+        );
         // Check if all assigned evaluators have voted for THIS report
         $assigned = $this->getAssignedEvaluatorsForReport($submission_id, $report_type);
         $assigned_ids = array_column($assigned, 'id');

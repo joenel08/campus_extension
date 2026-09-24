@@ -10,3 +10,5 @@ $routes['/news'] = ['controller' => 'NewsController', 'action' => 'index'];
 $routes['/news/show'] = ['controller' => 'NewsController', 'action' => 'show'];
 $routes['/events'] = ['controller' => 'EventsController', 'action' => 'index'];
 $routes['/events/show'] = ['controller' => 'EventsController', 'action' => 'show'];
+
+$postRoutes['/notifications/mark-all-read'] = ['NotificationController', 'markAllRead'];

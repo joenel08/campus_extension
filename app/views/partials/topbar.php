@@ -1,41 +1,56 @@
-  <div class="topbar">
+<?php
+// Notification data must be set by the controller before rendering
+// If not set, fallback to empty
+$notifications = $notifications ?? [];
+$unreadCount = $unreadCount ?? 0;
+?>
 
-      <input class="search" placeholder="Search...">
+<div class="topbar">
 
-      <div class="notification-wrapper">
+    <input class="search" placeholder="Search...">
 
-          <button class="notification-btn" onclick="toggleNotification()">
+    <div class="notification-wrapper">
 
-              <i class="fas fa-bell"></i>
+        <button class="notification-btn" onclick="toggleNotification()">
+            <i class="fas fa-bell"></i>
+            <?php if ($unreadCount > 0): ?>
+                <div class="notification-count"><?= $unreadCount ?></div>
+            <?php endif; ?>
+        </button>
 
-              <div class="notification-count">
-                  3
-              </div>
+        <div class="notification-panel" id="notificationPanel">
 
-          </button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0;">Notifications</h3>
+                <?php if ($unreadCount > 0): ?>
+                    <form method="POST" action="/notifications/mark-all-read" style="margin:0;">
+                        <button type="submit" style="background:none; border:none; color:#2563eb; font-size:12px; cursor:pointer; font-weight:600;">Mark all read</button>
+                    </form>
+                <?php endif; ?>
+            </div>
 
-          <div class="notification-panel" id="notificationPanel">
+            <?php if (empty($notifications)): ?>
+                <p style="color:#999; text-align:center; padding:15px;">No notifications.</p>
+            <?php else: ?>
+                <?php foreach ($notifications as $n): ?>
+                    <div class="notification-item" style="<?= $n['is_read'] ? 'opacity:0.6;' : '' ?>">
+                        <h4 style="display:flex; justify-content:space-between; align-items:center;">
+                            <?= htmlspecialchars($n['title']) ?>
+                            <?php if (!$n['is_read']): ?>
+                                <span style="width:8px; height:8px; background:#2563eb; border-radius:50%;"></span>
+                            <?php endif; ?>
+                        </h4>
+                        <p><?= htmlspecialchars($n['message']) ?></p>
+                        <?php if (!empty($n['link'])): ?>
+                            <a href="<?= htmlspecialchars($n['link']) ?>" style="color:#2563eb; font-size:12px; text-decoration:none;">View →</a>
+                        <?php endif; ?>
+                        <span style="font-size:11px; color:#999; display:block; margin-top:4px;">
+                            <?= date('M d, Y H:i', strtotime($n['created_at'])) ?>
+                        </span>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
-              <h3>Notifications</h3>
-
-              <div class="notification-item">
-                  <h4>Evaluation</h4>
-                  <p>Successfully evaluated your paper.</p>
-              </div>
-
-
-              <div class="notification-item">
-                  <h4>New Submission Received</h4>
-                  <p>Proposal Review 2026 has 5 new submissions.</p>
-              </div>
-
-              <div class="notification-item">
-                  <h4>Account Registration</h4>
-                  <p>New account has been registered.</p>
-              </div>
-
-          </div>
-
-      </div>
-
-  </div>
+        </div>
+    </div>
+</div>

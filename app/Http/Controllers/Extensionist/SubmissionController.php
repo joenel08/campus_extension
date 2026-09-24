@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/College.php';
 require_once __DIR__ . '/../../../models/ProgressReport.php';
 require_once __DIR__ . '/../../../models/TerminalReport.php';
-
+require_once __DIR__ . '/../../../models/Notification.php';   // <-- ADD
 
 class SubmissionController extends \ExtensionistBaseController
 {
@@ -16,10 +16,9 @@ class SubmissionController extends \ExtensionistBaseController
     private $proposalModel;
     private $progressReportModel;
     private $terminalReportModel;
+    private $notificationModel;   // <-- ADD
     private $uploadDir = 'uploads/submissions/';
     private $db;
-
-
 
     public function __construct()
     {
@@ -27,22 +26,24 @@ class SubmissionController extends \ExtensionistBaseController
         $config = require __DIR__ . '/../../../../config/database.php';
         $pdo = new \PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->db = $pdo;  // <-- ADD THIS
+        $this->db = $pdo;
         $this->submissionModel = new \Submission($pdo);
         $this->proposalModel = new \Proposal($pdo);
         $this->collegeModel = new \College($pdo);
         $this->progressReportModel = new \ProgressReport($pdo);
         $this->terminalReportModel = new \TerminalReport($pdo);
+        $this->notificationModel = new \Notification($pdo);   // <-- ADD
+
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
     }
+
     private function handleFileUpload($file, $oldPath = null)
     {
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            return $oldPath; // no new file, keep old
+            return $oldPath;
         }
-        // Delete old file if exists
         if ($oldPath && file_exists($oldPath)) {
             unlink($oldPath);
         }
@@ -52,18 +53,16 @@ class SubmissionController extends \ExtensionistBaseController
         move_uploaded_file($file['tmp_name'], $destination);
         return $destination;
     }
+
     public function index()
     {
         $user_id = $_SESSION['user_id'];
         $college_id = $_SESSION['college_id'] ?? 0;
 
-        // Get all proposal submissions for this user
         $submissions = $this->submissionModel->getAllByUser($user_id);
 
-        // Group by proposal_id (or just by submission_id, since each proposal submission is unique)
         $grouped = [];
         foreach ($submissions as $s) {
-            // We only want proposal submissions as the primary rows
             if ($s['report_type'] !== 'proposal') continue;
 
             $sid = $s['id'];
@@ -75,7 +74,6 @@ class SubmissionController extends \ExtensionistBaseController
                 'all_progress_approved' => true,
             ];
 
-            // Check if all progress reports are approved
             foreach ($grouped[$sid]['progress_reports'] as $pr) {
                 if ($pr['status'] !== 'approved') {
                     $grouped[$sid]['all_progress_approved'] = false;
@@ -84,7 +82,6 @@ class SubmissionController extends \ExtensionistBaseController
             }
         }
 
-        // For the "New Submission" modal (open proposals)
         $proposals = [];
         if ($college_id) {
             $all_proposals = $this->proposalModel->getOpenByCollege($college_id);
@@ -103,26 +100,30 @@ class SubmissionController extends \ExtensionistBaseController
     public function create()
     {
         $user_id = $_SESSION['user_id'];
-        $submission_id = $_GET['submission_id'] ?? 0;   // <-- CHANGED
         $report_type = $_GET['type'] ?? 'proposal';
 
-        if (!$submission_id) {
-            header('Location: /extensionist/submissions');
-            exit;
-        }
-
-        // Validation
         if ($report_type === 'proposal') {
-            // For proposals, submission_id is the proposal catalog ID passed from the modal
-            // (modal sends proposal_id from proposals table)
-            $existing = $this->submissionModel->findByUserAndProposal($user_id, $submission_id);
+            $proposal_id = $_GET['proposal_id'] ?? 0;
+            if (!$proposal_id) {
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $existing = $this->submissionModel->findByUserAndProposal($user_id, $proposal_id);
             if ($existing) {
                 $_SESSION['info'] = 'You already have a proposal submission for this call.';
                 header('Location: /extensionist/submissions/edit?id=' . $existing['id']);
                 exit;
             }
+
+            $selected_submission_id = $proposal_id;
         } else {
-            // For progress/terminal, verify the parent submission is approved
+            $submission_id = $_GET['submission_id'] ?? 0;
+            if (!$submission_id) {
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
             $parent = $this->submissionModel->find($submission_id, $user_id);
             if (!$parent || $parent['status'] !== 'approved') {
                 $_SESSION['error'] = 'You can only submit progress/terminal reports for approved proposals.';
@@ -135,6 +136,8 @@ class SubmissionController extends \ExtensionistBaseController
                 header('Location: /extensionist/submissions');
                 exit;
             }
+
+            $selected_submission_id = $submission_id;
         }
 
         $college_abbr = $_SESSION['college_abbr'] ?? '';
@@ -143,13 +146,14 @@ class SubmissionController extends \ExtensionistBaseController
 
         $this->render('submissions/create', [
             'colleges' => $colleges,
-            'selected_submission_id' => $submission_id,  // <-- renamed
+            'selected_submission_id' => $selected_submission_id,
             'user_college' => $college_abbr,
             'user_name' => $user_name,
             'report_type' => $report_type,
             'form_data' => []
         ]);
     }
+
     public function edit()
     {
         $id = $_GET['id'] ?? 0;
@@ -164,8 +168,6 @@ class SubmissionController extends \ExtensionistBaseController
         $college_abbr = $_SESSION['college_abbr'] ?? '';
         $colleges = $this->collegeModel->getAll();
         $user_name = $_SESSION['user_name'] ?? '';
-        $submission = $this->submissionModel->find($id, $user_id);
-        $form_data = json_decode($submission['form_data'], true);
         $this->render('submissions/edit', [
             'submission' => $submission,
             'form_data' => $form_data,
@@ -174,7 +176,7 @@ class SubmissionController extends \ExtensionistBaseController
             'user_name' => $user_name,
         ]);
     }
-    // Store new submission
+
     public function store()
     {
         $user_id = $_SESSION['user_id'];
@@ -189,7 +191,6 @@ class SubmissionController extends \ExtensionistBaseController
         }
 
         if ($report_type === 'proposal') {
-            // The submission_id here is actually the proposal catalog ID
             $form_data = $this->buildFormData($_POST, 'proposal');
             if ($attachment) $form_data['attachment'] = $attachment;
 
@@ -200,7 +201,19 @@ class SubmissionController extends \ExtensionistBaseController
                 exit;
             }
 
-            $this->submissionModel->create($user_id, $submission_id, 'proposal', $form_data, $status);
+            $newId = $this->submissionModel->create($user_id, $submission_id, 'proposal', $form_data, $status);
+
+            // === NOTIFY ADMINS (only if submitted for review) ===
+            if ($status === 'submitted') {
+                $adminIds = $this->notificationModel->getAdmins();
+                $this->notificationModel->createBulk(
+                    $adminIds,
+                    'proposal_submitted',
+                    'New Proposal Submission',
+                    ($form_data['basic_info']['project_title'] ?? 'Untitled') . ' submitted by ' . ($_SESSION['user_name'] ?? 'Unknown'),
+                    '/admin/monitoring'
+                );
+            }
         } elseif ($report_type === 'progress') {
             if (!$submission_id) {
                 $_SESSION['error'] = 'Missing parent submission.';
@@ -215,6 +228,31 @@ class SubmissionController extends \ExtensionistBaseController
                 'attachment'      => $attachment,
                 'status'          => $status,
             ]);
+
+            // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
+            if ($status === 'submitted') {
+                // Notify admins
+                $adminIds = $this->notificationModel->getAdmins();
+                $this->notificationModel->createBulk(
+                    $adminIds,
+                    'progress_submitted',
+                    'New Progress Report',
+                    ($_SESSION['user_name'] ?? 'Unknown') . ' submitted a progress report.',
+                    '/admin/monitoring'
+                );
+
+                // Notify assigned evaluators
+                $stmt = $this->db->prepare("SELECT evaluator_id FROM submission_evaluators WHERE submission_id = ?");
+                $stmt->execute([$submission_id]);
+                $evaluatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                $this->notificationModel->createBulk(
+                    $evaluatorIds,
+                    'progress_submitted',
+                    'New Progress Report to Evaluate',
+                    'A new progress report is available for your evaluation.',
+                    '/evaluator/dashboard'
+                );
+            }
         } elseif ($report_type === 'terminal') {
             if (!$submission_id) {
                 $_SESSION['error'] = 'Missing parent submission.';
@@ -235,6 +273,29 @@ class SubmissionController extends \ExtensionistBaseController
                 'attachment'       => $attachment,
                 'status'           => $status,
             ]);
+
+            // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
+            if ($status === 'submitted') {
+                $adminIds = $this->notificationModel->getAdmins();
+                $this->notificationModel->createBulk(
+                    $adminIds,
+                    'terminal_submitted',
+                    'New Terminal Report',
+                    ($_SESSION['user_name'] ?? 'Unknown') . ' submitted a terminal report.',
+                    '/admin/monitoring'
+                );
+
+                $stmt = $this->db->prepare("SELECT evaluator_id FROM submission_evaluators WHERE submission_id = ?");
+                $stmt->execute([$submission_id]);
+                $evaluatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+                $this->notificationModel->createBulk(
+                    $evaluatorIds,
+                    'terminal_submitted',
+                    'New Terminal Report to Evaluate',
+                    'A terminal report is available for your evaluation.',
+                    '/evaluator/dashboard'
+                );
+            }
         }
 
         $_SESSION['success'] = 'Submission saved successfully.';
@@ -242,8 +303,6 @@ class SubmissionController extends \ExtensionistBaseController
         exit;
     }
 
-
-    // Update submission
     public function update()
     {
         $id = $_POST['id'] ?? 0;
@@ -258,13 +317,11 @@ class SubmissionController extends \ExtensionistBaseController
         $report_type = $submission['report_type'];
         $form_data = $this->buildFormData($_POST, $report_type);
 
-        // Preserve existing attachment if no new file is uploaded
         $oldData = json_decode($submission['form_data'], true);
         if (isset($oldData['attachment'])) {
             $form_data['attachment'] = $oldData['attachment'];
         }
 
-        // Handle file upload (replace if new file uploaded)
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
             $form_data['attachment'] = $this->handleFileUpload($_FILES['attachment'], $oldData['attachment'] ?? null);
         }
@@ -281,7 +338,7 @@ class SubmissionController extends \ExtensionistBaseController
             exit;
         }
     }
-    // Delete submission
+
     public function delete()
     {
         $id = $_POST['id'] ?? 0;
@@ -297,7 +354,6 @@ class SubmissionController extends \ExtensionistBaseController
         exit;
     }
 
-    // Show single submission
     public function show()
     {
         $id = $_GET['id'] ?? 0;
@@ -317,7 +373,6 @@ class SubmissionController extends \ExtensionistBaseController
         $data = [];
 
         if ($report_type === 'proposal') {
-            // Collect components from dynamic table
             $components = [];
             if (isset($post['component_title']) && is_array($post['component_title'])) {
                 foreach ($post['component_title'] as $index => $title) {

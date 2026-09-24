@@ -214,6 +214,18 @@ class AuthController
 
         if ($created) {
             unset($_SESSION['temp_registration']);
+
+              // === NOTIFY ADMINS ===
+        require_once __DIR__ . '/../../models/Notification.php';
+        $notifModel = new Notification($this->db);
+        $adminIds = $notifModel->getAdmins();
+        $notifModel->createBulk(
+            $adminIds,
+            'account_registered',
+            'New Account Registration',
+            $temp['name'] . ' registered as ' . $temp['role'] . '.',
+            '/admin/accounts'
+        );
             $_SESSION['login_success'] = 'Account verified successfully! Please login with your credentials.';
             header('Location: /login');
             exit;

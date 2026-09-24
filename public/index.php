@@ -48,17 +48,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-     if ($url === '/register') {
+    if ($url === '/register') {
         $controller = new AuthController();
         $controller->register();
         exit;
     }
-     if ($url === '/verify-otp') {
+    if ($url === '/verify-otp') {
         $controller = new AuthController();
         $controller->verifyOtp();
         exit;
     }
 
+    if ($url === '/notifications/mark-all-read') {
+        $config = require __DIR__ . '/../config/database.php';
+        $pdo = new PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
+        require_once __DIR__ . '/../app/models/Notification.php';
+        $notifModel = new Notification($pdo);
+        $notifModel->markAllRead($_SESSION['user_id']);
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/'));
+        exit;
+    }
 
     // Map POST URLs to controller actions
     $postRoutes = [

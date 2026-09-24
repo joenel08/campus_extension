@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../../models/EvaluatorVote.php';
 require_once __DIR__ . '/../../../models/EvaluatorRating.php';
 require_once __DIR__ . '/../../../models/ProgressReport.php';
 require_once __DIR__ . '/../../../models/TerminalReport.php';
+require_once __DIR__ . '/../../../models/Notification.php';
 
 
 
@@ -21,6 +22,7 @@ class MonitoringController extends \Controller
     private $ratingModel;
     private $progressReportModel;
     private $terminalReportModel;
+    private $notificationModel;
 
     private $db; // store PDO connection
 
@@ -40,6 +42,7 @@ class MonitoringController extends \Controller
         $this->progressReportModel = new \ProgressReport($pdo);
         $this->terminalReportModel = new \TerminalReport($pdo);
         $this->ratingModel = new \EvaluatorRating($pdo);
+        $this->notificationModel = new \Notification($pdo);
     }
 
     public function index()
@@ -102,6 +105,18 @@ class MonitoringController extends \Controller
         if ($id) {
             $this->submissionModel->updateAdminStatus($id, 'pending_evaluation', $remarks);
             $_SESSION['success'] = 'Proposal approved for evaluation.';
+
+            // === NOTIFY EXTENSIONIST ===
+            $submission = $this->submissionModel->find($id);
+            if ($submission) {
+                $this->notificationModel->create(
+                    $submission['user_id'],
+                    'proposal_approved',
+                    'Proposal Approved',
+                    'Your proposal has been approved for evaluation.',
+                    '/extensionist/submissions'
+                );
+            }
         } else {
             $_SESSION['error'] = 'Invalid ID.';
         }
@@ -115,6 +130,18 @@ class MonitoringController extends \Controller
         if ($id) {
             $this->submissionModel->updateAdminStatus($id, 'revision', $remarks);
             $_SESSION['success'] = 'Revision requested.';
+
+             // === NOTIFY EXTENSIONIST ===
+            $submission = $this->submissionModel->find($id);
+            if ($submission) {
+                $this->notificationModel->create(
+                    $submission['user_id'],
+                    'proposal_revision',
+                    'Proposal Needs Revision',
+                    'Your proposal needs revision. Remarks: ' . $remarks,
+                    '/extensionist/submissions'
+                );
+            }
         } else {
             $_SESSION['error'] = 'Invalid ID.';
         }
@@ -129,6 +156,18 @@ class MonitoringController extends \Controller
         if ($id) {
             $this->submissionModel->updateAdminStatus($id, 'rejected', $remarks);
             $_SESSION['success'] = 'Submission declined.';
+
+             // === NOTIFY EXTENSIONIST ===
+            $submission = $this->submissionModel->find($id);
+            if ($submission) {
+                $this->notificationModel->create(
+                    $submission['user_id'],
+                    'proposal_rejected',
+                    'Proposal Declined',
+                    'Your proposal has been declined. Remarks: ' . $remarks,
+                    '/extensionist/submissions'
+                );
+            }
         } else {
             $_SESSION['error'] = 'Invalid ID.';
         }
@@ -234,6 +273,19 @@ class MonitoringController extends \Controller
             $stmt->execute([$submission_id]);
             foreach ($evaluator_ids as $eid) {
                 $this->proposalModel->assignEvaluator($submission_id, $eid);
+            }
+
+             // === NOTIFY EVALUATORS ===
+            $submission = $this->submissionModel->find($submission_id);
+            $title = $submission['proposal_title'] ?? 'a proposal';
+            foreach ($evaluator_ids as $eid) {
+                $this->notificationModel->create(
+                    $eid,
+                    'evaluator_assigned',
+                    'New Evaluation Assignment',
+                    'You have been assigned to evaluate "' . $title . '".',
+                    '/evaluator/dashboard'
+                );
             }
             echo '<div class="alert alert-success">Evaluators assigned successfully.</div>';
         } else {

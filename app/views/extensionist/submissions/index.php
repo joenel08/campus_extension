@@ -189,8 +189,8 @@
     }
 
     function selectProposal(id) {
-        window.location.href = '/extensionist/submissions/create?proposal_id=' + id;
-    }
+    window.location.href = '/extensionist/submissions/create?proposal_id=' + id + '&type=proposal';
+}
 function viewReport(id, type) {
     const modal = document.getElementById('reportModal');
     const body = document.getElementById('reportModalBody');

@@ -1,13 +1,17 @@
 <?php
+
 namespace Admin;
 
 require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/College.php';
+require_once __DIR__ . '/../../../models/Notification.php';
 
 class ProposalController extends \Controller
 {
     private $proposalModel;
     private $collegeModel;
+    private $notificationModel;   // <-- ADD
+    private $db;                  // <-- ADD
     private $uploadDir = 'uploads/proposals/';
 
     public function __construct()
@@ -16,8 +20,11 @@ class ProposalController extends \Controller
         $config = require __DIR__ . '/../../../../config/database.php';
         $pdo = new \PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        $this->db = $pdo;                                        // <-- STORE
         $this->proposalModel = new \Proposal($pdo);
         $this->collegeModel = new \College($pdo);
+        $this->notificationModel = new \Notification($pdo);      // <-- INSTANTIATE
 
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
@@ -47,16 +54,27 @@ class ProposalController extends \Controller
         $description = trim($_POST['description'] ?? '');
         $file_path = '';
 
-        if ($_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
+        if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
             $file_path = $this->uploadFile($_FILES['file_path']);
         }
 
         if ($title && $opening_date && $closing_date && $college_id) {
             $this->proposalModel->create($title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path);
             $_SESSION['success'] = 'Proposal published successfully.';
+
+            // Send notifications to extensionists in that college
+            $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
+            $this->notificationModel->createBulk(
+                $extensionistIds,
+                'call_for_proposal',
+                'New Call for Proposal',
+                'A new proposal call "' . $title . '" is now open. Deadline: ' . $closing_date,
+                '/extensionist/submissions'
+            );
         } else {
             $_SESSION['error'] = 'Title, college, opening date, and closing date are required.';
         }
+
         header('Location: /admin/proposal');
         exit;
     }
@@ -93,7 +111,7 @@ class ProposalController extends \Controller
         }
 
         $file_path = $proposal['file_path'];
-        if ($_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
+        if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
             if ($file_path && file_exists($file_path)) {
                 unlink($file_path);
             }
@@ -103,6 +121,18 @@ class ProposalController extends \Controller
         if ($title && $opening_date && $closing_date && $college_id) {
             $this->proposalModel->update($id, $title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path);
             $_SESSION['success'] = 'Proposal updated successfully.';
+
+            // Notify extensionists if the call is re-opened
+            if ($status === 'open') {
+                $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
+                $this->notificationModel->createBulk(
+                    $extensionistIds,
+                    'call_for_proposal',
+                    'Call for Proposal Updated',
+                    'The call "' . $title . '" has been updated. Deadline: ' . $closing_date,
+                    '/extensionist/submissions'
+                );
+            }
         } else {
             $_SESSION['error'] = 'Title, college, opening date, and closing date are required.';
         }
@@ -133,6 +163,22 @@ class ProposalController extends \Controller
         $status = $_POST['status'] ?? 'open';
         $this->proposalModel->toggleStatus($id, $status);
         $_SESSION['success'] = 'Status updated.';
+
+        // Notify extensionists if the call is now open
+        if ($status === 'open') {
+            $proposal = $this->proposalModel->find($id);
+            if ($proposal) {
+                $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $proposal['college_id']);
+                $this->notificationModel->createBulk(
+                    $extensionistIds,
+                    'call_for_proposal',
+                    'Call for Proposal is Now Open',
+                    'The call "' . $proposal['title'] . '" is now open for submissions.',
+                    '/extensionist/submissions'
+                );
+            }
+        }
+
         header('Location: /admin/proposal');
         exit;
     }
