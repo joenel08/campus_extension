@@ -1,48 +1,42 @@
-<!-- WELCOME SECTION -->
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_SESSION['success']) ?></div>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+<?php if (isset($_SESSION['profile_error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_SESSION['profile_error']) ?></div>
+    <?php unset($_SESSION['profile_error']); ?>
+<?php endif; ?>
 <div class="hero-dashboard">
-
   <div class="hero-left">
-
     <div class="hero-profile">
-
-      <div class="hero-image">
-        <img src="https://i.pravatar.cc/200?img=12">
+      <div class="hero-image" style="position:relative;">
+        <?php if (!empty($currentUser['profile_picture']) && file_exists($currentUser['profile_picture'])): ?>
+          <img src="/<?= htmlspecialchars($currentUser['profile_picture']) ?>" alt="Profile">
+        <?php else: ?>
+          <img src="https://i.pravatar.cc/200?img=12" alt="Profile">
+        <?php endif; ?>
+        <button onclick="openProfileModal()" style="position:absolute; bottom:5px; right:5px; width:34px; height:34px; border-radius:50%; background:#2563eb; color:#fff; border:2px solid #fff; cursor:pointer;" title="Edit Profile">
+          <i class="fas fa-pen" style="font-size:13px;"></i>
+        </button>
       </div>
 
       <div>
-
-        <div class="hero-badge">
-          Admin Panel
-        </div>
-
-        <h1 class="hero-name">
-          <?= htmlspecialchars($_SESSION['user_name'] ?? 'Director User') ?>
-        </h1>
-
-        <p class="hero-role">
-          Research & Extension Director
-        </p>
-
+        <div class="hero-badge">Admin Panel</div>
+        <h1 class="hero-name"><?= htmlspecialchars($currentUser['name'] ?? 'Admin') ?></h1>
+        <p class="hero-role">Research & Extension Director</p>
       </div>
-
     </div>
-
   </div>
 
   <div class="hero-right">
-
-    <div class="hero-campus">
-      <i class="fas fa-location-dot"></i>
-      ISU Cabagan Campus
+    <div class="hero-campus"><i class="fas fa-location-dot"></i> ISU Cabagan Campus</div>
+    <div class="hero-date"><i class="fas fa-calendar"></i>  <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
+    <div>
+      <button onclick="openProfileModal()" style="padding:10px 18px; border:none; border-radius:8px; background:#fff; color:#183153; font-weight:600; cursor:pointer;">
+        <i class="fas fa-user-edit"></i> Edit Profile
+      </button>
     </div>
-
-    <div class="hero-date">
-      <i class="fas fa-calendar"></i>
-      Academic Year 2026
-    </div>
-
   </div>
-
 </div>
 
 <!-- STATISTICS -->
@@ -99,7 +93,69 @@
     <canvas id="programChart"></canvas>
   </div>
 </div>
+<!-- Profile Edit Modal -->
+<div id="profileModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>Edit Profile</h3>
+      <button class="close-modal" onclick="closeProfileModal()">&times;</button>
+    </div>
 
+    <?php if (isset($_SESSION['profile_error'])): ?>
+      <div style="color:red; margin-bottom:15px;"><?= htmlspecialchars($_SESSION['profile_error']) ?></div>
+      <?php unset($_SESSION['profile_error']); ?>
+    <?php endif; ?>
+
+    <form method="POST" action="/admin/profile/update" enctype="multipart/form-data">
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:600;">Full Name</label>
+        <input type="text" name="name" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;"
+          value="<?= htmlspecialchars($currentUser['name'] ?? '') ?>" required>
+      </div>
+
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:600;">Email Address</label>
+        <input type="email" name="email" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;"
+          value="<?= htmlspecialchars($currentUser['email'] ?? '') ?>" required>
+      </div>
+
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:600;">New Password (leave blank to keep current)</label>
+        <input type="password" name="password" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+      </div>
+
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:600;">Profile Picture</label>
+        <?php if (!empty($currentUser['profile_picture']) && file_exists($currentUser['profile_picture'])): ?>
+          <div style="margin-bottom:8px;">
+            <img src="/<?= htmlspecialchars($currentUser['profile_picture']) ?>"
+              style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #e5e7eb;">
+          </div>
+        <?php endif; ?>
+        <input type="file" name="profile_picture" accept="image/*" style="width:100%; padding:10px;">
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+        <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openProfileModal() {
+    document.getElementById('profileModal').style.display = 'flex';
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profileModal').style.display = 'none';
+  }
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('profileModal');
+    if (e.target === modal) modal.style.display = 'none';
+  });
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('programChart');
@@ -124,7 +180,9 @@
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { stepSize: 1 }
+              ticks: {
+                stepSize: 1
+              }
             }
           }
         }

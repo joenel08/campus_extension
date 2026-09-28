@@ -50,6 +50,7 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>Academic Year</th>
                 <th>Proposal Title</th>
                 <th>Status</th>
                 <th>Submitted</th>
@@ -71,6 +72,7 @@
                     ?>
                     <tr>
                         <td><?= $counter++ ?></td>
+                        <td><?= htmlspecialchars($proposal['academic_year_label'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($data['proposal_title']) ?></td>
                         <td>
                             <?php

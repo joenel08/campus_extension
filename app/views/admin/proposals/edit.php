@@ -160,6 +160,19 @@
         <input type="hidden" name="id" value="<?= $proposal['id'] ?>">
         <div class="proposal-grid">
             <div class="proposal-group">
+                <label class="proposal-label">Academic Year</label>
+                <select name="academic_year_id" class="proposal-select" required>
+                    <option value="">Select Academic Year</option>
+                    <?php foreach ($years as $y): ?>
+                        <option value="<?= $y['id'] ?>"
+                            <?= $proposal['academic_year_id'] == $y['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($y['year_label']) ?>
+                            <?= $y['is_current'] ? ' (Current)' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="proposal-group">
                 <label class="proposal-label">College</label>
                 <select name="college_id" class="proposal-select" required>
                     <option value="">Select College</option>
@@ -170,6 +183,8 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+
+
             <div class="proposal-group ">
                 <label class="proposal-label">Proposal Title</label>
                 <input type="text" name="title" class="proposal-input" value="<?= htmlspecialchars($proposal['title']) ?>" required>
@@ -190,6 +205,17 @@
                     <option value="closed" <?= $proposal['status'] === 'closed' ? 'selected' : '' ?>>Closed</option>
                 </select>
             </div>
+            <div class="proposal-group">
+                <label class="proposal-label">Current File</label>
+                <?php if ($proposal['file_path']): ?>
+                    <p style="margin-bottom:10px;"><a href="/<?= $proposal['file_path'] ?>" target="_blank">View Current File</a></p>
+                <?php else: ?>
+                    <p style="color:#999; margin-bottom:10px;">No file uploaded.</p>
+                <?php endif; ?>
+                <label class="proposal-label" style="margin-top:10px;">Replace File (leave empty to keep current)</label>
+                <input type="file" name="file_path" class="proposal-input">
+            </div>
+
 
             <div class="proposal-group">
                 <label class="proposal-label">Opening Date</label>
@@ -201,17 +227,7 @@
                 <input type="date" name="closing_date" class="proposal-input" value="<?= $proposal['closing_date'] ?>" required>
             </div>
 
-            <div class="proposal-group full">
-                <label class="proposal-label">Current File</label>
-                <?php if ($proposal['file_path']): ?>
-                    <p style="margin-bottom:10px;"><a href="/<?= $proposal['file_path'] ?>" target="_blank">View Current File</a></p>
-                <?php else: ?>
-                    <p style="color:#999; margin-bottom:10px;">No file uploaded.</p>
-                <?php endif; ?>
-                <label class="proposal-label" style="margin-top:10px;">Replace File (leave empty to keep current)</label>
-                <input type="file" name="file_path" class="proposal-input">
-            </div>
-
+            
             <div class="proposal-group full">
                 <label class="proposal-label">Proposal Description</label>
                 <textarea name="description" class="proposal-textarea" placeholder="Enter proposal announcement details..."><?= htmlspecialchars($proposal['description']) ?></textarea>

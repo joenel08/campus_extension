@@ -22,12 +22,12 @@ class ProgressReport
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($submission_id, $user_id, $data, $academic_year_id = null)
+    public function create($submission_id, $user_id, $data)
     {
         $stmt = $this->db->prepare("
             INSERT INTO progress_reports 
-            (submission_id, user_id, report_date, accomplishments, issues, next_plan, attachment, status, academic_year_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (submission_id, user_id, report_date, accomplishments, issues, next_plan, attachment, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
         return $stmt->execute([
             $submission_id,
@@ -37,8 +37,7 @@ class ProgressReport
             $data['issues'],
             $data['next_plan'],
             $data['attachment'] ?? null,
-            $data['status'] ?? 'draft',
-            $academic_year_id
+            $data['status'] ?? 'draft'
         ]);
     }
 

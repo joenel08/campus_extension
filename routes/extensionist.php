@@ -8,3 +8,4 @@ $routes['/extensionist/submissions/edit'] = ['controller' => 'Extensionist\\Subm
 $routes['/extensionist/submissions/show'] = ['controller' => 'Extensionist\\SubmissionController', 'action' => 'show'];
 
 $routes['/extensionist/report-data'] = ['controller' => 'Extensionist\\SubmissionController', 'action' => 'getReportData'];
+$routes['/extensionist/submissions/filtered'] = ['controller' => 'Extensionist\\SubmissionController', 'action' => 'filtered'];

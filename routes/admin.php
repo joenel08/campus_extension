@@ -1,6 +1,8 @@
 
 <?php
+
 $routes['/admin/dashboard']     = ['controller' => 'Admin\\DashboardController', 'action' => 'index'];
+$routes['/admin/academic-years'] = ['controller' => 'Admin\\AcademicYearController', 'action' => 'index'];
 $routes['/admin/accounts']      = ['controller' => 'Admin\\AccountsController', 'action' => 'index'];
 $routes['/admin/accounts/create'] = ['controller' => 'Admin\\AccountsController', 'action' => 'create'];
 $routes['/admin/accounts/edit']  = ['controller' => 'Admin\\AccountsController', 'action' => 'edit'];

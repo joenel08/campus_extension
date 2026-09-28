@@ -69,6 +69,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($url === '/notifications/mark-read') {
+        $config = require __DIR__ . '/../config/database.php';
+        $pdo = new PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
+        require_once __DIR__ . '/../app/models/Notification.php';
+        $notifModel = new Notification($pdo);
+
+        $id = $_POST['id'] ?? 0;
+        $redirect = $_POST['redirect'] ?? '/';
+
+        if ($id) {
+            $notifModel->markRead($id);
+        }
+
+        header('Location: ' . $redirect);
+        exit;
+    }
+    if ($url === '/admin/profile/update') {
+        require_once __DIR__ . '/../app/Http/Controllers/Admin/DashboardController.php';
+        $controller = new \Admin\DashboardController();
+        $controller->updateProfile();
+        exit;
+    }
+
+    if ($url === '/extensionist/profile/update') {
+        require_once __DIR__ . '/../app/Http/Controllers/Extensionist/DashboardController.php';
+        $controller = new \Extensionist\DashboardController();
+        $controller->updateProfile();
+        exit;
+    }
+
+    if ($url === '/admin/academic-years/store') {
+        $controller = new \Admin\AcademicYearController();
+        $controller->store();
+        exit;
+    }
+    if ($url === '/admin/academic-years/update') {
+        $controller = new \Admin\AcademicYearController();
+        $controller->update();
+        exit;
+    }
+    if ($url === '/admin/academic-years/delete') {
+        $controller = new \Admin\AcademicYearController();
+        $controller->delete();
+        exit;
+    }
+    if ($url === '/admin/academic-years/set-current') {
+        $controller = new \Admin\AcademicYearController();
+        $controller->setCurrent();
+        exit;
+    }
+
+    if ($url === '/evaluator/profile/update') {
+        require_once __DIR__ . '/../app/Http/Controllers/Evaluator/DashboardController.php';
+        $controller = new \Evaluator\DashboardController();
+        $controller->updateProfile();
+        exit;
+    }
+
+    if ($url === '/forgot-password') {
+        $controller = new AuthController();
+        $controller->sendResetOtp();
+        exit;
+    }
+    if ($url === '/verify-reset-otp') {
+        $controller = new AuthController();
+        $controller->verifyResetOtp();
+        exit;
+    }
+    if ($url === '/reset-password') {
+        $controller = new AuthController();
+        $controller->resetPassword();
+        exit;
+    }
+
     // Map POST URLs to controller actions
     $postRoutes = [
 

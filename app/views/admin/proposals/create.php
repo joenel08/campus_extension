@@ -159,6 +159,17 @@
 
     <form method="POST" action="/admin/proposal/store" enctype="multipart/form-data">
         <div class="proposal-grid">
+             <!-- ACADEMIC YEAR -->
+            <div class="proposal-group">
+                <label class="proposal-label">Academic Year</label>
+                <input type="text" class="proposal-input"
+                    value="<?= htmlspecialchars($currentAcademicYear['year_label'] ?? 'No Academic Year Set') ?>"
+                    readonly style="background:#f0f0f0; font-weight:600; color:#2563eb;">
+                <p style="font-size:13px; color:#6c757d; margin-top:5px;">
+                    Auto-filled from the current academic year. To change it, go to
+                    <a href="/admin/academic-years" style="color:#2563eb; font-weight:600;">Academic Years</a>.
+                </p>
+            </div>
             <div class="proposal-group">
                 <label class="proposal-label">College</label>
                 <select name="college_id" class="proposal-select" required>
@@ -168,6 +179,7 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+           
             <div class="proposal-group">
                 <label class="proposal-label">Proposal Title</label>
                 <input type="text" name="title" class="proposal-input" placeholder="Enter proposal title" required>
@@ -189,6 +201,11 @@
                     <option value="closed">Closed</option>
                 </select>
             </div>
+            <div class="proposal-group">
+                <label class="proposal-label">Upload Proposal Guidelines</label>
+                <input type="file" name="file_path" class="proposal-input">
+                <p style="font-size:13px; color:#6c757d; margin-top:5px;">Upload PDF, DOC, or DOCX files.</p>
+            </div>
 
             <div class="proposal-group">
                 <label class="proposal-label">Opening Date</label>
@@ -200,11 +217,7 @@
                 <input type="date" name="closing_date" class="proposal-input" required>
             </div>
 
-            <div class="proposal-group full">
-                <label class="proposal-label">Upload Proposal Guidelines</label>
-                <input type="file" name="file_path" class="proposal-input">
-                <p style="font-size:13px; color:#6c757d; margin-top:5px;">Upload PDF, DOC, or DOCX files.</p>
-            </div>
+            
 
             <div class="proposal-group full">
                 <label class="proposal-label">Proposal Description</label>

@@ -7,6 +7,15 @@ class ExtensionistBaseController
             header('Location: /login');
             exit;
         }
+
+        if (!isset($_SESSION['academic_year_id'])) {
+            $config = require __DIR__ . '/../../../config/database.php';
+            $pdo = new PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
+            $stmt = $pdo->query("SELECT * FROM academic_years WHERE is_current = TRUE LIMIT 1");
+            $y = $stmt->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['academic_year_id'] = $y['id'] ?? null;
+            $_SESSION['academic_year_label'] = $y['year_label'] ?? 'N/A';
+        }
     }
 
     // protected function render($view, $data = [])

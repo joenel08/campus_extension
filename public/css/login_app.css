@@ -10,36 +10,32 @@ body{
 }
 
 .container{
-  min-height:100vh;
-  display:flex;
+    min-height:100vh;
+    display:flex;
 }
 
 .left-side{
-  width:85%;
-  height:100%;
-  position:relative;
-  overflow:hidden;
+    width:85%;
+    min-height:100vh;
+    position:relative;
+    overflow:hidden;
 
-  background:
-linear-gradient(
-  to bottom right,
+    background:
+    linear-gradient(
+        to bottom right,
+        rgba(247, 248, 248, 0.45),
+        rgba(154, 168, 161, 0.35),
+        rgba(255,255,255,0.10)
+    ),
+    url('/images/isu4.jfif');
 
-  rgba(247, 248, 248, 0.45),
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
 
-  rgba(154, 168, 161, 0.35),
-
-  rgba(255,255,255,0.10)
-
-),
-url('/images/isu4.jfif');
-
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .overlay{
@@ -113,7 +109,7 @@ url('/images/isu4.jfif');
 }
 
 .form-logo{
-  width:400px;
+  width:300px;
   margin-bottom:20px;
 }
 

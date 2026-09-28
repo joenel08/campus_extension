@@ -1,13 +1,20 @@
 <?php
-// Notification data must be set by the controller before rendering
-// If not set, fallback to empty
 $notifications = $notifications ?? [];
 $unreadCount = $unreadCount ?? 0;
+$academicYearLabel = $_SESSION['academic_year_label'] ?? 'No Academic Year Set';
+
+// Show only unread notifications
+$unreadNotifications = array_filter($notifications, function ($n) {
+    return !$n['is_read'];
+});
 ?>
 
 <div class="topbar">
 
-    <input class="search" placeholder="Search...">
+    <!-- Current Academic Year Badge -->
+    <div class="academic-year-badge">
+        <span style="color:gray;">&nbsp;Current A.Y. <?= htmlspecialchars($academicYearLabel) ?></span>
+    </div>
 
     <div class="notification-wrapper">
 
@@ -29,25 +36,46 @@ $unreadCount = $unreadCount ?? 0;
                 <?php endif; ?>
             </div>
 
-            <?php if (empty($notifications)): ?>
-                <p style="color:#999; text-align:center; padding:15px;">No notifications.</p>
+            <?php if (empty($unreadNotifications)): ?>
+                <p style="color:#999; text-align:center; padding:15px;">No new notifications.</p>
             <?php else: ?>
-                <?php foreach ($notifications as $n): ?>
-                    <div class="notification-item" style="<?= $n['is_read'] ? 'opacity:0.6;' : '' ?>">
-                        <h4 style="display:flex; justify-content:space-between; align-items:center;">
-                            <?= htmlspecialchars($n['title']) ?>
-                            <?php if (!$n['is_read']): ?>
-                                <span style="width:8px; height:8px; background:#2563eb; border-radius:50%;"></span>
-                            <?php endif; ?>
-                        </h4>
-                        <p><?= htmlspecialchars($n['message']) ?></p>
-                        <?php if (!empty($n['link'])): ?>
-                            <a href="<?= htmlspecialchars($n['link']) ?>" style="color:#2563eb; font-size:12px; text-decoration:none;">View →</a>
-                        <?php endif; ?>
-                        <span style="font-size:11px; color:#999; display:block; margin-top:4px;">
-                            <?= date('M d, Y H:i', strtotime($n['created_at'])) ?>
-                        </span>
-                    </div>
+                <?php foreach ($unreadNotifications as $n): ?>
+                    <?php if (!empty($n['link'])): ?>
+                        <form method="POST" action="/notifications/mark-read" style="margin:0;">
+                            <input type="hidden" name="id" value="<?= $n['id'] ?>">
+                            <input type="hidden" name="redirect" value="<?= htmlspecialchars($n['link']) ?>">
+                            <button type="submit" style="display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer;">
+                                <div class="notification-item">
+                                    <h4 style="display:flex; justify-content:space-between; align-items:center;">
+                                        <?= htmlspecialchars($n['title']) ?>
+                                        <span style="width:8px; height:8px; background:#2563eb; border-radius:50%;"></span>
+                                    </h4>
+                                    <p><?= htmlspecialchars($n['message']) ?></p>
+                                    <span style="font-size:11px; color:#999; display:block; margin-top:4px;">
+                                        <?= date('M d, Y H:i', strtotime($n['created_at'])) ?>
+                                    </span>
+                                </div>
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <!-- No link: mark as read on click, no navigation -->
+                        <form method="POST" action="/notifications/mark-read" style="margin:0;">
+                            <input type="hidden" name="id" value="<?= $n['id'] ?>">
+                            <input type="hidden" name="redirect" value="<?= htmlspecialchars($_SERVER['REQUEST_URI']) ?>">
+                            <button type="submit" style="display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer;">
+                                <div class="notification-item">
+                                    <h4 style="display:flex; justify-content:space-between; align-items:center;">
+                                        <?= htmlspecialchars($n['title']) ?>
+                                        <span style="width:8px; height:8px; background:#2563eb; border-radius:50%;"></span>
+                                    </h4>
+                                    <p><?= htmlspecialchars($n['message']) ?></p>
+                                    <span style="font-size:11px; color:#999; display:block; margin-top:4px;">
+                                        <?= date('M d, Y H:i', strtotime($n['created_at'])) ?>
+                                    </span>
+                                </div>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             <?php endif; ?>
 

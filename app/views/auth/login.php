@@ -20,7 +20,7 @@ $colleges = $colleges ?? [];
         <!-- Left Side -->
         <div class="left-side">
             <div class="overlay">
-                <img src="/images/isu_logo.png" class="top-logo" alt="ISU Logo">
+                <!-- <img src="/images/isu_logo.png" class="top-logo" alt="ISU Logo"> -->
             </div>
         </div>
 
@@ -60,12 +60,19 @@ $colleges = $colleges ?? [];
                     <button type="submit" class="login-btn">
                         <i class="fas fa-key"></i> Sign-in Account
                     </button>
+                    <div style="text-align:right; margin-top:-20px; margin-bottom:10px;">
+                        <a href="/forgot-password" style="color:#00a651; font-size:13px; text-decoration:none;">
+                            Forgot Password?
+                        </a>
+                    </div>
                 </form>
 
                 <div class="bottom-link">
                     No account?
                     <a href="/register" style="color:#00a651; font-weight:bold;">Register</a>
+
                 </div>
+
             </div>
 
 

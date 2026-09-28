@@ -2,105 +2,132 @@
     <div class="alert alert-success"><?= htmlspecialchars($_SESSION['success']) ?></div>
     <?php unset($_SESSION['success']); ?>
 <?php endif; ?>
-<?php if (isset($_SESSION['error'])): ?>
-    <div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']) ?></div>
-    <?php unset($_SESSION['error']); ?>
+<?php if (isset($_SESSION['profile_error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_SESSION['profile_error']) ?></div>
+    <?php unset($_SESSION['profile_error']); ?>
 <?php endif; ?>
 
-<div class="card">
-    <div class="table-header">
-        <h2><i class="fas fa-tasks"></i> Assigned Proposals for Evaluation</h2>
-        <p class="table-subtitle">Evaluate the proposal, progress reports, and terminal report</p>
+<!-- HERO / PROFILE -->
+<div class="hero-dashboard">
+    <div class="hero-left">
+        <div class="hero-profile">
+            <div class="hero-image" style="position:relative;">
+                <?php if (!empty($currentUser['profile_picture']) && file_exists($currentUser['profile_picture'])): ?>
+                    <img src="/<?= htmlspecialchars($currentUser['profile_picture']) ?>" alt="Profile">
+                <?php else: ?>
+                    <img src="https://i.pravatar.cc/200?img=15" alt="Profile">
+                <?php endif; ?>
+                <button onclick="openProfileModal()" style="position:absolute; bottom:5px; right:5px; width:34px; height:34px; border-radius:50%; background:#2563eb; color:#fff; border:2px solid #fff; cursor:pointer;" title="Edit Profile">
+                    <i class="fas fa-pen" style="font-size:13px;"></i>
+                </button>
+            </div>
+
+            <div>
+                <div class="hero-badge">Evaluator Panel</div>
+                <h1 class="hero-name"><?= htmlspecialchars($currentUser['name'] ?? 'Evaluator') ?></h1>
+                <p class="hero-role"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
+            </div>
+        </div>
     </div>
 
-    <?php if (empty($grouped)): ?>
-        <p style="padding:20px; text-align:center; color:#777;">No proposals assigned to you.</p>
-    <?php else: ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>Proposal Title</th>
-                    <th>Extensionist</th>
-                    <th>Proposal</th>
-                    <th>Progress Reports</th>
-                    <th>Terminal Report</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($grouped as $data): ?>
-                    <tr>
-                        <td><strong><?= htmlspecialchars($data['proposal_title']) ?></strong></td>
-                        <td><?= htmlspecialchars($data['extensionist_name']) ?></td>
-
-                        <!-- Proposal -->
-                        <td>
-                            <?php if ($data['proposal_evaluated']): ?>
-                                <span class="badge <?= $data['proposal_vote'] === 'approve' ? 'badge-approved' : ($data['proposal_vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
-                                    <?= ucfirst($data['proposal_vote']) ?>
-                                </span>
-                                <a href="/evaluator/evaluate?id=<?= $data['submission_id'] ?>&type=proposal" class="btn btn-sm btn-edit">
-                                    <i class="fas fa-eye"></i> 
-                                </a>
-                            <?php else: ?>
-                                <span class="badge badge-pending">Pending</span>
-                                <a href="/evaluator/evaluate?id=<?= $data['submission_id'] ?>&type=proposal" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-pen"></i> Evaluate
-                                </a>
-                            <?php endif; ?>
-                        </td>
-
-                        <!-- Progress Reports -->
-                        <td>
-                            <?php if (!empty($data['progress_reports'])): ?>
-                                <?php foreach ($data['progress_reports'] as $idx => $pr): ?>
-                                    <div style="display:flex; align-items:center; gap:6px; margin:3px 0; flex-wrap:wrap;">
-                                        <span style="font-size:13px; min-width:80px;">R<?= $idx + 1 ?></span>
-                                        <?php if ($pr['evaluated']): ?>
-                                            <span class="badge <?= $pr['vote'] === 'approve' ? 'badge-approved' : ($pr['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
-                                                <?= ucfirst($pr['vote']) ?>
-                                            </span>
-                                            <a href="/evaluator/evaluate?id=<?= $pr['id'] ?>&type=progress" class="btn btn-sm btn-edit">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        <?php else: ?>
-                                            <span class="badge badge-pending">Pending</span>
-                                            <a href="/evaluator/evaluate?id=<?= $pr['id'] ?>&type=progress" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-pen"></i> Evaluate
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <span style="color:#999; font-size:13px;">No progress reports</span>
-                            <?php endif; ?>
-                        </td>
-
-                        <!-- Terminal Report -->
-                        <td>
-                            <?php if ($data['terminal_report']): ?>
-                                <?php $term = $data['terminal_report']; ?>
-                                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                                    <?php if ($term['evaluated']): ?>
-                                        <span class="badge <?= $term['vote'] === 'approve' ? 'badge-approved' : ($term['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
-                                            <?= ucfirst($term['vote']) ?>
-                                        </span>
-                                        <a href="/evaluator/evaluate?id=<?= $term['id'] ?>&type=terminal" class="btn btn-sm btn-edit">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    <?php else: ?>
-                                        <span class="badge badge-pending">Pending</span>
-                                        <a href="/evaluator/evaluate?id=<?= $term['id'] ?>&type=terminal" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-pen"></i> Evaluate
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            <?php else: ?>
-                                <span style="color:#999; font-size:13px;">Not yet submitted</span>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+    <div class="hero-right">
+        <div class="hero-campus"><i class="fas fa-location-dot"></i> ISU Cabagan Campus</div>
+        <div class="hero-date"><i class="fas fa-calendar"></i> <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
+        <div>
+            <button onclick="openProfileModal()" style="padding:10px 18px; border:none; border-radius:8px; background:#fff; color:#183153; font-weight:600; cursor:pointer;">
+                <i class="fas fa-user-edit"></i> Edit Profile
+            </button>
+        </div>
+    </div>
 </div>
+
+<!-- STATS -->
+<div class="stats-grid">
+    <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
+        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+        <div class="stat-number"><?= $totalAssigned ?? 0 ?></div>
+        <div class="stat-title">Total Assigned</div>
+    </div>
+    <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-number"><?= $evaluated ?? 0 ?></div>
+        <div class="stat-title">Evaluated</div>
+    </div>
+    <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
+        <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+        <div class="stat-number"><?= $pending ?? 0 ?></div>
+        <div class="stat-title">Pending</div>
+    </div>
+</div>
+
+<!-- CALL TO ACTION -->
+<div class="call-submission-card">
+    <div class="call-submission-header">
+        <div>
+            <h2><i class="fas fa-clipboard-check"></i> Evaluations</h2>
+            <p>View and manage all proposals, progress reports, and terminal reports assigned to you.</p>
+        </div>
+        <button class="submit-btn" onclick="window.location.href='/evaluator/evaluations'">
+            Go to Evaluations →
+        </button>
+    </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div id="profileModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:500px;">
+        <div class="modal-header">
+            <h3>Edit Profile</h3>
+            <button class="close-modal" onclick="closeProfileModal()">&times;</button>
+        </div>
+
+        <?php if (isset($_SESSION['profile_error'])): ?>
+            <div style="color:red; margin-bottom:15px;"><?= htmlspecialchars($_SESSION['profile_error']) ?></div>
+            <?php unset($_SESSION['profile_error']); ?>
+        <?php endif; ?>
+
+        <form method="POST" action="/evaluator/profile/update" enctype="multipart/form-data">
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600;">Full Name</label>
+                <input type="text" name="name" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;"
+                       value="<?= htmlspecialchars($currentUser['name'] ?? '') ?>" required>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600;">Email Address</label>
+                <input type="email" name="email" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;"
+                       value="<?= htmlspecialchars($currentUser['email'] ?? '') ?>" required>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600;">New Password (leave blank to keep current)</label>
+                <input type="password" name="password" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600;">Profile Picture</label>
+                <?php if (!empty($currentUser['profile_picture']) && file_exists($currentUser['profile_picture'])): ?>
+                    <div style="margin-bottom:8px;">
+                        <img src="/<?= htmlspecialchars($currentUser['profile_picture']) ?>"
+                             style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #e5e7eb;">
+                    </div>
+                <?php endif; ?>
+                <input type="file" name="profile_picture" accept="image/*" style="width:100%; padding:10px;">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openProfileModal() { document.getElementById('profileModal').style.display = 'flex'; }
+    function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('profileModal');
+        if (e.target === modal) modal.style.display = 'none';
+    });
+</script>

@@ -18,47 +18,63 @@
 
     <!-- Filters (unchanged) -->
     <form method="GET" action="/admin/monitoring" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px; padding:15px; background:#f8fafc; border-radius:8px;">
-        <div>
-            <label>Status</label>
-            <select name="status" class="form-input">
-                <option value="">All</option>
-                <option value="draft" <?= ($filters['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option>
-                <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option>
-                <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approved</option>
-                <option value="revision" <?= ($filters['status'] ?? '') === 'revision' ? 'selected' : '' ?>>Revision</option>
-                <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Declined</option>
-            </select>
-        </div>
-        <div>
-            <label>College</label>
-            <select name="college_id" class="form-input">
-                <option value="">All</option>
-                <?php foreach ($colleges as $c): ?>
-                    <option value="<?= $c['id'] ?>" <?= ($filters['college_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($c['abbreviation']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div>
-            <label>Date From</label>
-            <input type="date" name="date_from" class="form-input" value="<?= $filters['date_from'] ?? '' ?>">
-        </div>
-        <div>
-            <label>Date To</label>
-            <input type="date" name="date_to" class="form-input" value="<?= $filters['date_to'] ?? '' ?>">
-        </div>
-        <div style="display:flex; align-items:flex-end; gap:10px;">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
-            <a href="/admin/monitoring" class="btn btn-secondary">Clear</a>
-        </div>
-    </form>
+    <div>
+        <label>Status</label>
+        <select name="status" class="form-input">
+            <option value="">All</option>
+            <option value="draft" <?= ($filters['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option>
+            <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option>
+            <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approved</option>
+            <option value="pending_evaluation" <?= ($filters['status'] ?? '') === 'pending_evaluation' ? 'selected' : '' ?>>Pending Evaluation</option>
+            <option value="under_evaluation" <?= ($filters['status'] ?? '') === 'under_evaluation' ? 'selected' : '' ?>>Under Evaluation</option>
+            <option value="revision" <?= ($filters['status'] ?? '') === 'revision' ? 'selected' : '' ?>>Revision</option>
+            <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Declined</option>
+        </select>
+    </div>
+    <div>
+        <label>College</label>
+        <select name="college_id" class="form-input">
+            <option value="">All</option>
+            <?php foreach ($colleges as $c): ?>
+                <option value="<?= $c['id'] ?>" <?= ($filters['college_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($c['abbreviation']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <!-- ACADEMIC YEAR FILTER -->
+    <div>
+        <label>Academic Year</label>
+        <select name="academic_year_id" class="form-input">
+            <option value="">All Years</option>
+            <?php foreach ($years as $y): ?>
+                <option value="<?= $y['id'] ?>" <?= ($filters['academic_year_id'] ?? '') == $y['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($y['year_label']) ?>
+                    <?= $y['is_current'] ? ' (Current)' : '' ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div>
+        <label>Date From</label>
+        <input type="date" name="date_from" class="form-input" value="<?= $filters['date_from'] ?? '' ?>">
+    </div>
+    <div>
+        <label>Date To</label>
+        <input type="date" name="date_to" class="form-input" value="<?= $filters['date_to'] ?? '' ?>">
+    </div>
+    <div style="display:flex; align-items:flex-end; gap:10px;">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+        <a href="/admin/monitoring" class="btn btn-secondary">Clear</a>
+    </div>
+</form>
 
     <!-- TABLE grouped by proposal -->
     <table>
         <thead>
             <tr>
                 <th>#</th>
+                 <th>Academic Year</th>   
                 <th>Extensionist</th>
                 <th>Proposal Title</th>
                 <th>College</th>
@@ -80,6 +96,7 @@
                     <?php if (!$proposal) continue; ?>
                     <tr>
                         <td><?= $counter++ ?></td>
+                        <td><?= htmlspecialchars($data['academic_year_label'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($data['extensionist_name']) ?></td>
                         <td><strong><?= htmlspecialchars($data['proposal_title']) ?></strong></td>
                         <td><?= htmlspecialchars($data['college_abbr']) ?></td>
@@ -99,19 +116,20 @@
                             <span class="badge <?= $statusClass[$proposal['status']] ?? 'badge-pending' ?>">
                                 <?= ucfirst($proposal['status']) ?>
                             </span>
-                            <a href="/admin/submissions/show?id=<?= $proposal['id'] ?>" class="btn btn-sm btn-edit"><i class="fas fa-eye"></i></a>
-                        
-                           <!-- Existing action buttons -->
+                            <a href="/admin/submissions/show?id=<?= $proposal['id'] ?>&type=proposal" class="btn btn-sm btn-edit">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <!-- Existing action buttons -->
                             <?php if (in_array($proposal['status'], ['pending_evaluation', 'under_evaluation', 'approved'])): ?>
-    <button class="btn btn-sm btn-primary" onclick="openAssignModal(<?= $proposal['id'] ?>)">
-        <i class="fas fa-user-plus"></i> Assign
-    </button>
-<?php endif; ?>
+                                <button class="btn btn-sm btn-primary" onclick="openAssignModal(<?= $proposal['id'] ?>)">
+                                    <i class="fas fa-user-plus"></i> Assign
+                                </button>
+                            <?php endif; ?>
                             <?php if ($proposal['status'] === 'submitted'): ?>
                                 <button class="btn btn-sm btn-success" onclick="openActionModal(<?= $proposal['id'] ?>, 'approve')"><i class="fas fa-check"></i></button>
                                 <button class="btn btn-sm btn-warning" onclick="openActionModal(<?= $proposal['id'] ?>, 'revise')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-sm btn-danger" onclick="openActionModal(<?= $proposal['id'] ?>, 'decline')"><i class="fas fa-times"></i></button>
-                          
+
                             <?php endif; ?>
                         </td>
                         <td>
@@ -122,7 +140,9 @@
                                         <span class="badge <?= $statusClass[$pr['status']] ?? 'badge-pending' ?>">
                                             <?= ucfirst($pr['status']) ?>
                                         </span>
-                                        <a href="/admin/submissions/show?id=<?= $pr['id'] ?>" class="btn btn-sm btn-edit"><i class="fas fa-eye"></i></a>
+                                        <a href="/admin/submissions/show?id=<?= $pr['id'] ?>&type=progress" class="btn btn-sm btn-edit">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
                                     </div>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -134,12 +154,14 @@
                                 <span class="badge <?= $statusClass[$data['terminal_report']['status']] ?? 'badge-pending' ?>">
                                     <?= ucfirst($data['terminal_report']['status']) ?>
                                 </span>
-                                <a href="/admin/submissions/show?id=<?= $data['terminal_report']['id'] ?>" class="btn btn-sm btn-edit"><i class="fas fa-eye"></i></a>
+                                <a href="/admin/submissions/show?id=<?= $data['terminal_report']['id'] ?>&type=terminal" class="btn btn-sm btn-edit">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                             <?php else: ?>
                                 <span style="color:#999; font-size:12px;">Not submitted</span>
                             <?php endif; ?>
                         </td>
-                       
+
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -216,47 +238,47 @@
     }
 
     // === Assign Evaluators Modal ===
-   function openAssignModal(submissionId) {
-    const modal = document.getElementById('assignModal');
-    const body = document.getElementById('assignModalBody');
-    body.innerHTML = '<p style="text-align:center; padding:20px;">Loading evaluators...</p>';
-    modal.style.display = 'flex';
+    function openAssignModal(submissionId) {
+        const modal = document.getElementById('assignModal');
+        const body = document.getElementById('assignModalBody');
+        body.innerHTML = '<p style="text-align:center; padding:20px;">Loading evaluators...</p>';
+        modal.style.display = 'flex';
 
-    fetch('/admin/monitoring/assign-modal?submission_id=' + submissionId)
-        .then(response => response.text())
-        .then(html => {
-            body.innerHTML = html;
+        fetch('/admin/monitoring/assign-modal?submission_id=' + submissionId)
+            .then(response => response.text())
+            .then(html => {
+                body.innerHTML = html;
 
-            // Attach submit handler to the newly inserted form
-            const form = document.getElementById('assignForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    fetch(form.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        body.innerHTML = html;
-                        if (html.includes('success')) {
-                            setTimeout(() => {
-                                closeAssignModal();
-                                location.reload();
-                            }, 1200);
-                        }
-                    })
-                    .catch(err => {
-                        body.innerHTML = '<p style="color:red;">Error saving.</p>';
+                // Attach submit handler to the newly inserted form
+                const form = document.getElementById('assignForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        fetch(form.action, {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.text())
+                            .then(html => {
+                                body.innerHTML = html;
+                                if (html.includes('success')) {
+                                    setTimeout(() => {
+                                        closeAssignModal();
+                                        location.reload();
+                                    }, 1200);
+                                }
+                            })
+                            .catch(err => {
+                                body.innerHTML = '<p style="color:red;">Error saving.</p>';
+                            });
                     });
-                });
-            }
-        })
-        .catch(err => {
-            body.innerHTML = '<p style="color:red; text-align:center; padding:20px;">Error loading. Please try again.</p>';
-        });
-}
+                }
+            })
+            .catch(err => {
+                body.innerHTML = '<p style="color:red; text-align:center; padding:20px;">Error loading. Please try again.</p>';
+            });
+    }
 
     function closeAssignModal() {
         document.getElementById('assignModal').style.display = 'none';

@@ -97,6 +97,27 @@ class SubmissionController extends \ExtensionistBaseController
         ]);
     }
 
+    public function filtered()
+    {
+        $user_id = $_SESSION['user_id'];
+        $filter = $_GET['filter'] ?? 'all';
+
+        $submissions = $this->submissionModel->getFilteredByUser($user_id, $filter);
+
+        // Attach progress/terminal reports
+        foreach ($submissions as &$s) {
+            $sid = $s['id'];
+            $s['progress_reports'] = $this->progressReportModel->getBySubmission($sid);
+            $s['terminal_report'] = $this->terminalReportModel->getBySubmission($sid);
+        }
+        unset($s);
+
+        $this->render('submissions/filtered', [
+            'submissions' => $submissions,
+            'filter' => $filter,
+        ]);
+    }
+
     public function create()
     {
         $user_id = $_SESSION['user_id'];
@@ -177,14 +198,140 @@ class SubmissionController extends \ExtensionistBaseController
         ]);
     }
 
+    // public function store()
+    // {
+    //     $user_id = $_SESSION['user_id'];
+    //     $submission_id = $_POST['submission_id'] ?? null;
+    //     $report_type = $_POST['report_type'] ?? 'proposal';
+    //     $status = $_POST['status'] ?? 'draft';
+    //     $academic_year_id = $_SESSION['academic_year_id'] ?? null;
+
+    //     // Handle file upload
+    //     $attachment = null;
+    //     if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+    //         $attachment = $this->handleFileUpload($_FILES['attachment']);
+    //     }
+
+    //     if ($report_type === 'proposal') {
+    //         $form_data = $this->buildFormData($_POST, 'proposal');
+    //         if ($attachment) $form_data['attachment'] = $attachment;
+
+    //         $existing = $this->submissionModel->findByUserAndProposal($user_id, $submission_id);
+    //         if ($existing) {
+    //             $_SESSION['error'] = 'You already have a proposal submission for this call.';
+    //             header('Location: /extensionist/submissions');
+    //             exit;
+    //         }
+
+    //         $newId = $this->submissionModel->create($user_id, $submission_id, 'proposal', $form_data, $status);
+
+    //         // === NOTIFY ADMINS (only if submitted for review) ===
+    //         if ($status === 'submitted') {
+    //             $adminIds = $this->notificationModel->getAdmins();
+    //             $this->notificationModel->createBulk(
+    //                 $adminIds,
+    //                 'proposal_submitted',
+    //                 'New Proposal Submission',
+    //                 ($form_data['basic_info']['project_title'] ?? 'Untitled') . ' submitted by ' . ($_SESSION['user_name'] ?? 'Unknown'),
+    //                 '/admin/monitoring'
+    //             );
+    //         }
+    //     } elseif ($report_type === 'progress') {
+    //         if (!$submission_id) {
+    //             $_SESSION['error'] = 'Missing parent submission.';
+    //             header('Location: /extensionist/submissions');
+    //             exit;
+    //         }
+    //         $this->progressReportModel->create($submission_id, $user_id, [
+    //             'report_date'     => $_POST['report_date'] ?? '',
+    //             'accomplishments' => $_POST['accomplishments'] ?? '',
+    //             'issues'          => $_POST['issues'] ?? '',
+    //             'next_plan'       => $_POST['next_plan'] ?? '',
+    //             'attachment'      => $attachment,
+    //             'status'          => $status,
+    //         ]);
+
+    //         // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
+    //         if ($status === 'submitted') {
+    //             // Notify admins
+    //             $adminIds = $this->notificationModel->getAdmins();
+    //             $this->notificationModel->createBulk(
+    //                 $adminIds,
+    //                 'progress_submitted',
+    //                 'New Progress Report',
+    //                 ($_SESSION['user_name'] ?? 'Unknown') . ' submitted a progress report.',
+    //                 '/admin/monitoring'
+    //             );
+
+    //             // Notify assigned evaluators
+    //             $stmt = $this->db->prepare("SELECT evaluator_id FROM submission_evaluators WHERE submission_id = ?");
+    //             $stmt->execute([$submission_id]);
+    //             $evaluatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    //             $this->notificationModel->createBulk(
+    //                 $evaluatorIds,
+    //                 'progress_submitted',
+    //                 'New Progress Report to Evaluate',
+    //                 'A new progress report is available for your evaluation.',
+    //                 '/evaluator/dashboard'
+    //             );
+    //         }
+    //     } elseif ($report_type === 'terminal') {
+    //         if (!$submission_id) {
+    //             $_SESSION['error'] = 'Missing parent submission.';
+    //             header('Location: /extensionist/submissions');
+    //             exit;
+    //         }
+    //         if ($this->terminalReportModel->hasTerminalReport($submission_id)) {
+    //             $_SESSION['error'] = 'A terminal report already exists for this proposal.';
+    //             header('Location: /extensionist/submissions');
+    //             exit;
+    //         }
+    //         $this->terminalReportModel->create($submission_id, $user_id, [
+    //             'completion_date'  => $_POST['completion_date'] ?? '',
+    //             'overall_status'   => $_POST['overall_status'] ?? '',
+    //             'final_summary'    => $_POST['final_summary'] ?? '',
+    //             'lessons_learned'  => $_POST['lessons_learned'] ?? '',
+    //             'recommendations'  => $_POST['recommendations'] ?? '',
+    //             'attachment'       => $attachment,
+    //             'status'           => $status,
+    //         ]);
+
+    //         // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
+    //         if ($status === 'submitted') {
+    //             $adminIds = $this->notificationModel->getAdmins();
+    //             $this->notificationModel->createBulk(
+    //                 $adminIds,
+    //                 'terminal_submitted',
+    //                 'New Terminal Report',
+    //                 ($_SESSION['user_name'] ?? 'Unknown') . ' submitted a terminal report.',
+    //                 '/admin/monitoring'
+    //             );
+
+    //             $stmt = $this->db->prepare("SELECT evaluator_id FROM submission_evaluators WHERE submission_id = ?");
+    //             $stmt->execute([$submission_id]);
+    //             $evaluatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    //             $this->notificationModel->createBulk(
+    //                 $evaluatorIds,
+    //                 'terminal_submitted',
+    //                 'New Terminal Report to Evaluate',
+    //                 'A terminal report is available for your evaluation.',
+    //                 '/evaluator/dashboard'
+    //             );
+    //         }
+    //     }
+
+    //     $_SESSION['success'] = 'Submission saved successfully.';
+    //     header('Location: /extensionist/submissions');
+    //     exit;
+    // }
     public function store()
     {
         $user_id = $_SESSION['user_id'];
         $submission_id = $_POST['submission_id'] ?? null;
         $report_type = $_POST['report_type'] ?? 'proposal';
         $status = $_POST['status'] ?? 'draft';
+        $academic_year_id = $_SESSION['academic_year_id'] ?? null;
 
-        // Handle file upload
         $attachment = null;
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
             $attachment = $this->handleFileUpload($_FILES['attachment']);
@@ -201,9 +348,9 @@ class SubmissionController extends \ExtensionistBaseController
                 exit;
             }
 
-            $newId = $this->submissionModel->create($user_id, $submission_id, 'proposal', $form_data, $status);
+            // ⬇️ PASS $academic_year_id
+            $newId = $this->submissionModel->create($user_id, $submission_id, 'proposal', $form_data, $status, $academic_year_id);
 
-            // === NOTIFY ADMINS (only if submitted for review) ===
             if ($status === 'submitted') {
                 $adminIds = $this->notificationModel->getAdmins();
                 $this->notificationModel->createBulk(
@@ -220,6 +367,8 @@ class SubmissionController extends \ExtensionistBaseController
                 header('Location: /extensionist/submissions');
                 exit;
             }
+
+            // ⬇️ PASS $academic_year_id AS 4TH ARG
             $this->progressReportModel->create($submission_id, $user_id, [
                 'report_date'     => $_POST['report_date'] ?? '',
                 'accomplishments' => $_POST['accomplishments'] ?? '',
@@ -227,11 +376,9 @@ class SubmissionController extends \ExtensionistBaseController
                 'next_plan'       => $_POST['next_plan'] ?? '',
                 'attachment'      => $attachment,
                 'status'          => $status,
-            ]);
+            ], $academic_year_id);
 
-            // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
             if ($status === 'submitted') {
-                // Notify admins
                 $adminIds = $this->notificationModel->getAdmins();
                 $this->notificationModel->createBulk(
                     $adminIds,
@@ -241,7 +388,6 @@ class SubmissionController extends \ExtensionistBaseController
                     '/admin/monitoring'
                 );
 
-                // Notify assigned evaluators
                 $stmt = $this->db->prepare("SELECT evaluator_id FROM submission_evaluators WHERE submission_id = ?");
                 $stmt->execute([$submission_id]);
                 $evaluatorIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -264,6 +410,8 @@ class SubmissionController extends \ExtensionistBaseController
                 header('Location: /extensionist/submissions');
                 exit;
             }
+
+            // ⬇️ PASS $academic_year_id AS 4TH ARG
             $this->terminalReportModel->create($submission_id, $user_id, [
                 'completion_date'  => $_POST['completion_date'] ?? '',
                 'overall_status'   => $_POST['overall_status'] ?? '',
@@ -272,9 +420,8 @@ class SubmissionController extends \ExtensionistBaseController
                 'recommendations'  => $_POST['recommendations'] ?? '',
                 'attachment'       => $attachment,
                 'status'           => $status,
-            ]);
+            ], $academic_year_id);
 
-            // === NOTIFY ADMINS + ASSIGNED EVALUATORS ===
             if ($status === 'submitted') {
                 $adminIds = $this->notificationModel->getAdmins();
                 $this->notificationModel->createBulk(

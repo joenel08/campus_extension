@@ -22,12 +22,12 @@ class TerminalReport
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function create($submission_id, $user_id, $data, $academic_year_id = null)
+    public function create($submission_id, $user_id, $data)
     {
         $stmt = $this->db->prepare("
             INSERT INTO terminal_reports
-            (submission_id, user_id, completion_date, overall_status, final_summary, lessons_learned, recommendations, attachment, status, academic_year_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (submission_id, user_id, completion_date, overall_status, final_summary, lessons_learned, recommendations, attachment, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         return $stmt->execute([
             $submission_id,
@@ -38,8 +38,7 @@ class TerminalReport
             $data['lessons_learned'],
             $data['recommendations'],
             $data['attachment'] ?? null,
-            $data['status'] ?? 'draft',
-            $academic_year_id
+            $data['status'] ?? 'draft'
         ]);
     }
 

@@ -13,6 +13,10 @@
             <a href="/evaluator/dashboard" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/evaluator/dashboard') === 0 ? 'active' : '' ?>">
                 <i class="fas fa-chart-line"></i> Dashboard
             </a>
+
+            <a href="/evaluator/evaluations" class="nav-item <?= strpos($_SERVER['REQUEST_URI'], '/evaluator/evaluations') === 0 ? 'active' : '' ?>">
+                <i class="fas fa-tasks"></i> Evaluations
+            </a>
         </div>
     </div>
 

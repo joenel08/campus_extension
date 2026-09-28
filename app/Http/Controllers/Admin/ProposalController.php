@@ -5,13 +5,15 @@ namespace Admin;
 require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/College.php';
 require_once __DIR__ . '/../../../models/Notification.php';
+require_once __DIR__ . '/../../../models/AcademicYear.php';
 
 class ProposalController extends \Controller
 {
     private $proposalModel;
     private $collegeModel;
-    private $notificationModel;   // <-- ADD
-    private $db;                  // <-- ADD
+    private $notificationModel;
+    private $db;
+    private $academicYearModel;
     private $uploadDir = 'uploads/proposals/';
 
     public function __construct()
@@ -25,7 +27,7 @@ class ProposalController extends \Controller
         $this->proposalModel = new \Proposal($pdo);
         $this->collegeModel = new \College($pdo);
         $this->notificationModel = new \Notification($pdo);      // <-- INSTANTIATE
-
+        $this->academicYearModel = new \AcademicYear($pdo);
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
@@ -33,16 +35,67 @@ class ProposalController extends \Controller
 
     public function index()
     {
-        $proposals = $this->proposalModel->getAll();
-        $this->render('proposals/index', ['proposals' => $proposals]);
-    }
+        // Default to "ALL" when no filter is applied
+        $academic_year_id = $_GET['academic_year_id'] ?? null;
 
+        $proposals = $this->proposalModel->getAll($academic_year_id);
+        $years = $this->academicYearModel->getAll();
+
+        $this->render('proposals/index', [
+            'proposals' => $proposals,
+            'years' => $years,
+            'selected_year' => $academic_year_id, // null = All
+        ]);
+    }
+    
     public function create()
     {
         $colleges = $this->collegeModel->getAll();
-        $this->render('proposals/create', ['colleges' => $colleges]);
+
+        // Get current academic year
+        $currentAcademicYear = $this->academicYearModel->getCurrent();
+
+        $this->render('proposals/create', [
+            'colleges' => $colleges,
+            'currentAcademicYear' => $currentAcademicYear,
+        ]);
     }
 
+    // public function store()
+    // {
+    //     $title = trim($_POST['title'] ?? '');
+    //     $college_id = $_POST['college_id'] ?? null;
+    //     $category = $_POST['category'] ?? 'internally_funded';
+    //     $status = $_POST['status'] ?? 'open';
+    //     $opening_date = $_POST['opening_date'] ?? '';
+    //     $closing_date = $_POST['closing_date'] ?? '';
+    //     $description = trim($_POST['description'] ?? '');
+    //     $file_path = '';
+
+    //     if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
+    //         $file_path = $this->uploadFile($_FILES['file_path']);
+    //     }
+
+    //     if ($title && $opening_date && $closing_date && $college_id) {
+    //         $this->proposalModel->create($title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path);
+    //         $_SESSION['success'] = 'Proposal published successfully.';
+
+    //         // Send notifications to extensionists in that college
+    //         $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
+    //         $this->notificationModel->createBulk(
+    //             $extensionistIds,
+    //             'call_for_proposal',
+    //             'New Call for Proposal',
+    //             'A new proposal call "' . $title . '" is now open. Deadline: ' . $closing_date,
+    //             '/extensionist/submissions'
+    //         );
+    //     } else {
+    //         $_SESSION['error'] = 'Title, college, opening date, and closing date are required.';
+    //     }
+
+    //     header('Location: /admin/proposal');
+    //     exit;
+    // }
     public function store()
     {
         $title = trim($_POST['title'] ?? '');
@@ -53,16 +106,27 @@ class ProposalController extends \Controller
         $closing_date = $_POST['closing_date'] ?? '';
         $description = trim($_POST['description'] ?? '');
         $file_path = '';
+        $academic_year_id = $_SESSION['academic_year_id'] ?? null;   // <-- FROM SESSION
 
         if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
             $file_path = $this->uploadFile($_FILES['file_path']);
         }
 
         if ($title && $opening_date && $closing_date && $college_id) {
-            $this->proposalModel->create($title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path);
+            $this->proposalModel->create(
+                $title,
+                $college_id,
+                $category,
+                $status,
+                $opening_date,
+                $closing_date,
+                $description,
+                $file_path,
+                $academic_year_id
+            );
+
             $_SESSION['success'] = 'Proposal published successfully.';
 
-            // Send notifications to extensionists in that college
             $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
             $this->notificationModel->createBulk(
                 $extensionistIds,
@@ -88,8 +152,15 @@ class ProposalController extends \Controller
             header('Location: /admin/proposal');
             exit;
         }
+
         $colleges = $this->collegeModel->getAll();
-        $this->render('proposals/edit', ['proposal' => $proposal, 'colleges' => $colleges]);
+        $years = $this->academicYearModel->getAll();
+
+        $this->render('proposals/edit', [
+            'proposal' => $proposal,
+            'colleges' => $colleges,
+            'years' => $years,
+        ]);
     }
 
     public function update()
@@ -102,6 +173,7 @@ class ProposalController extends \Controller
         $opening_date = $_POST['opening_date'] ?? '';
         $closing_date = $_POST['closing_date'] ?? '';
         $description = trim($_POST['description'] ?? '');
+        $academic_year_id = $_POST['academic_year_id'] ?? ($_SESSION['academic_year_id'] ?? null);   // <-- ALLOW OVERRIDE
 
         $proposal = $this->proposalModel->find($id);
         if (!$proposal) {
@@ -119,10 +191,21 @@ class ProposalController extends \Controller
         }
 
         if ($title && $opening_date && $closing_date && $college_id) {
-            $this->proposalModel->update($id, $title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path);
+            $this->proposalModel->update(
+                $id,
+                $title,
+                $college_id,
+                $category,
+                $status,
+                $opening_date,
+                $closing_date,
+                $description,
+                $file_path,
+                $academic_year_id
+            );
+
             $_SESSION['success'] = 'Proposal updated successfully.';
 
-            // Notify extensionists if the call is re-opened
             if ($status === 'open') {
                 $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
                 $this->notificationModel->createBulk(
@@ -139,6 +222,7 @@ class ProposalController extends \Controller
         header('Location: /admin/proposal');
         exit;
     }
+
 
     public function delete()
     {

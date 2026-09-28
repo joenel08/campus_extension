@@ -10,6 +10,7 @@ require_once __DIR__ . '/../../../models/EvaluatorRating.php';
 require_once __DIR__ . '/../../../models/ProgressReport.php';
 require_once __DIR__ . '/../../../models/TerminalReport.php';
 require_once __DIR__ . '/../../../models/Notification.php';
+require_once __DIR__ . '/../../../models/AcademicYear.php'; 
 
 
 
@@ -23,7 +24,7 @@ class MonitoringController extends \Controller
     private $progressReportModel;
     private $terminalReportModel;
     private $notificationModel;
-
+private $academicYearModel;  
     private $db; // store PDO connection
 
     public function __construct()
@@ -43,6 +44,7 @@ class MonitoringController extends \Controller
         $this->terminalReportModel = new \TerminalReport($pdo);
         $this->ratingModel = new \EvaluatorRating($pdo);
         $this->notificationModel = new \Notification($pdo);
+        $this->academicYearModel = new \AcademicYear($pdo); 
     }
 
     public function index()
@@ -50,6 +52,7 @@ class MonitoringController extends \Controller
         $filters = [
             'status' => $_GET['status'] ?? null,
             'college_id' => $_GET['college_id'] ?? null,
+            'academic_year_id' => $_GET['academic_year_id'] ?? null,   // <-- ADD
             'date_from' => $_GET['date_from'] ?? null,
             'date_to' => $_GET['date_to'] ?? null,
         ];
@@ -57,10 +60,9 @@ class MonitoringController extends \Controller
             return $v !== null && $v !== '';
         });
 
-        // Fetch all proposal submissions with filters
         $submissions = $this->submissionModel->getAllWithFilters($filters);
 
-        // Group by composite key: user_id + proposal_id (for filtering)
+        // Group by composite key
         $grouped = [];
         foreach ($submissions as $s) {
             $pid = $s['proposal_id'];
@@ -76,6 +78,7 @@ class MonitoringController extends \Controller
                     'proposal_title'    => $s['proposal_title'] ?? 'N/A',
                     'extensionist_name' => $s['extensionist_name'] ?? 'N/A',
                     'college_abbr'      => $s['college_abbr'] ?? 'N/A',
+                    'academic_year_label' => $s['academic_year_label'] ?? 'N/A',   // <-- ADD
                     'proposal_submission' => $s,
                     'progress_reports'  => [],
                     'terminal_report'   => null,
@@ -83,17 +86,17 @@ class MonitoringController extends \Controller
                 ];
             }
 
-            // Fetch progress reports from new table
             $grouped[$key]['progress_reports'] = $this->progressReportModel->getBySubmission($s['id']);
-            // Fetch terminal report from new table
             $grouped[$key]['terminal_report'] = $this->terminalReportModel->getBySubmission($s['id']);
         }
 
         $colleges = $this->collegeModel->getAll();
+        $years = $this->academicYearModel->getAll();   // <-- ADD
 
         $this->render('monitoring/index', [
             'grouped' => $grouped,
             'colleges' => $colleges,
+            'years' => $years,   // <-- ADD
             'filters' => $filters,
         ]);
     }
@@ -131,7 +134,7 @@ class MonitoringController extends \Controller
             $this->submissionModel->updateAdminStatus($id, 'revision', $remarks);
             $_SESSION['success'] = 'Revision requested.';
 
-             // === NOTIFY EXTENSIONIST ===
+            // === NOTIFY EXTENSIONIST ===
             $submission = $this->submissionModel->find($id);
             if ($submission) {
                 $this->notificationModel->create(
@@ -157,7 +160,7 @@ class MonitoringController extends \Controller
             $this->submissionModel->updateAdminStatus($id, 'rejected', $remarks);
             $_SESSION['success'] = 'Submission declined.';
 
-             // === NOTIFY EXTENSIONIST ===
+            // === NOTIFY EXTENSIONIST ===
             $submission = $this->submissionModel->find($id);
             if ($submission) {
                 $this->notificationModel->create(
@@ -175,54 +178,154 @@ class MonitoringController extends \Controller
         exit;
     }
 
+    // public function show()
+    // {
+    //     $id = $_GET['id'] ?? 0;
+    //     if (!$id) {
+    //         $_SESSION['error'] = 'Invalid submission ID.';
+    //         header('Location: /admin/monitoring');
+    //         exit;
+    //     }
+
+    //     $submission = $this->submissionModel->find($id);
+    //     if (!$submission) {
+    //         $_SESSION['error'] = 'Submission not found.';
+    //         header('Location: /admin/monitoring');
+    //         exit;
+    //     }
+
+    //     $form_data = json_decode($submission['form_data'], true);
+
+    //     // Fetch evaluator votes for this submission
+    //     $votes = $this->voteModel->getVotesForSubmission($id);
+
+    //     // Fetch evaluator ratings (only for proposal)
+    //     $ratings = [];
+    //     if ($submission['report_type'] === 'proposal') {
+    //         $ratings = $this->ratingModel->getRatingsForSubmission($id);
+    //     }
+
+    //     // Group ratings by evaluator
+    //     $groupedRatings = [];
+    //     foreach ($ratings as $r) {
+    //         $eid = $r['evaluator_id'];
+    //         if (!isset($groupedRatings[$eid])) {
+    //             $groupedRatings[$eid] = [
+    //                 'evaluator_name' => $r['evaluator_name'],
+    //                 'criteria' => []
+    //             ];
+    //         }
+    //         $groupedRatings[$eid]['criteria'][] = [
+    //             'criteria_text' => $r['criteria_text'],
+    //             'rating' => $r['rating']
+    //         ];
+    //     }
+
+    //     $this->render('monitoring/show', [
+    //         'submission' => $submission,
+    //         'form_data' => $form_data,
+    //         'votes' => $votes,
+    //         'groupedRatings' => $groupedRatings,
+    //     ]);
+    // }
+
     public function show()
     {
         $id = $_GET['id'] ?? 0;
+        $type = $_GET['type'] ?? 'proposal';
+
         if (!$id) {
             $_SESSION['error'] = 'Invalid submission ID.';
             header('Location: /admin/monitoring');
             exit;
         }
 
-        $submission = $this->submissionModel->find($id);
-        if (!$submission) {
-            $_SESSION['error'] = 'Submission not found.';
-            header('Location: /admin/monitoring');
-            exit;
-        }
+        $parentFormData = null;
+        $parentSubmission = null;
 
-        $form_data = json_decode($submission['form_data'], true);
+        if ($type === 'progress') {
+            $stmt = $this->db->prepare("
+            SELECT pr.*, s.proposal_id, s.id as parent_submission_id,
+                   s.form_data as parent_form_data,
+                   u.name as extensionist_name, p.title as proposal_title
+            FROM progress_reports pr
+            JOIN submissions s ON pr.submission_id = s.id
+            JOIN proposals p ON s.proposal_id = p.id
+            JOIN users u ON pr.user_id = u.id
+            WHERE pr.id = ?
+        ");
+            $stmt->execute([$id]);
+            $submission = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Fetch evaluator votes for this submission
-        $votes = $this->voteModel->getVotesForSubmission($id);
+            if (!$submission) {
+                $_SESSION['error'] = 'Progress report not found.';
+                header('Location: /admin/monitoring');
+                exit;
+            }
 
-        // Fetch evaluator ratings (only for proposal)
-        $ratings = [];
-        if ($submission['report_type'] === 'proposal') {
-            $ratings = $this->ratingModel->getRatingsForSubmission($id);
-        }
+            $parentFormData = json_decode($submission['parent_form_data'], true);
+            $form_data = [];
+            $votes = $this->voteModel->getVotesForSubmission($id, 'progress');
+            $groupedRatings = [];
+        } elseif ($type === 'terminal') {
+            $stmt = $this->db->prepare("
+            SELECT tr.*, s.proposal_id, s.id as parent_submission_id,
+                   s.form_data as parent_form_data,
+                   u.name as extensionist_name, p.title as proposal_title
+            FROM terminal_reports tr
+            JOIN submissions s ON tr.submission_id = s.id
+            JOIN proposals p ON s.proposal_id = p.id
+            JOIN users u ON tr.user_id = u.id
+            WHERE tr.id = ?
+        ");
+            $stmt->execute([$id]);
+            $submission = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Group ratings by evaluator
-        $groupedRatings = [];
-        foreach ($ratings as $r) {
-            $eid = $r['evaluator_id'];
-            if (!isset($groupedRatings[$eid])) {
-                $groupedRatings[$eid] = [
-                    'evaluator_name' => $r['evaluator_name'],
-                    'criteria' => []
+            if (!$submission) {
+                $_SESSION['error'] = 'Terminal report not found.';
+                header('Location: /admin/monitoring');
+                exit;
+            }
+
+            $parentFormData = json_decode($submission['parent_form_data'], true);
+            $form_data = [];
+            $votes = $this->voteModel->getVotesForSubmission($id, 'terminal');
+            $groupedRatings = [];
+        } else {
+            $submission = $this->submissionModel->find($id);
+            if (!$submission) {
+                $_SESSION['error'] = 'Submission not found.';
+                header('Location: /admin/monitoring');
+                exit;
+            }
+
+            $form_data = json_decode($submission['form_data'], true);
+            $votes = $this->voteModel->getVotesForSubmission($id, 'proposal');
+
+            $ratings = $this->ratingModel->getRatingsForSubmission($id, 'proposal');
+            $groupedRatings = [];
+            foreach ($ratings as $r) {
+                $eid = $r['evaluator_id'];
+                if (!isset($groupedRatings[$eid])) {
+                    $groupedRatings[$eid] = [
+                        'evaluator_name' => $r['evaluator_name'],
+                        'criteria' => []
+                    ];
+                }
+                $groupedRatings[$eid]['criteria'][] = [
+                    'criteria_text' => $r['criteria_text'],
+                    'rating' => $r['rating']
                 ];
             }
-            $groupedRatings[$eid]['criteria'][] = [
-                'criteria_text' => $r['criteria_text'],
-                'rating' => $r['rating']
-            ];
         }
 
         $this->render('monitoring/show', [
             'submission' => $submission,
             'form_data' => $form_data,
+            'parentFormData' => $parentFormData,
             'votes' => $votes,
             'groupedRatings' => $groupedRatings,
+            'report_type' => $type,
         ]);
     }
     public function assignModal()
@@ -275,7 +378,7 @@ class MonitoringController extends \Controller
                 $this->proposalModel->assignEvaluator($submission_id, $eid);
             }
 
-             // === NOTIFY EVALUATORS ===
+            // === NOTIFY EVALUATORS ===
             $submission = $this->submissionModel->find($submission_id);
             $title = $submission['proposal_title'] ?? 'a proposal';
             foreach ($evaluator_ids as $eid) {

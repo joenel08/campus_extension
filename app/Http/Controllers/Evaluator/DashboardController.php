@@ -11,6 +11,7 @@ class DashboardController extends \EvaluatorBaseController
     private $evaluationModel;
     private $progressReportModel;
     private $terminalReportModel;
+    private $db;
 
     public function __construct()
     {
@@ -18,26 +19,64 @@ class DashboardController extends \EvaluatorBaseController
         $config = require __DIR__ . '/../../../../config/database.php';
         $pdo = new \PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->db = $pdo;
         $this->evaluationModel = new \Evaluation($pdo);
         $this->progressReportModel = new \ProgressReport($pdo);
         $this->terminalReportModel = new \TerminalReport($pdo);
     }
 
+    // ===== DASHBOARD (Profile + Stats) =====
     public function index()
     {
         $evaluator_id = $_SESSION['user_id'];
 
-        // Get all assigned proposal submissions
+        // Fetch current user
+        $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
+        $stmt->execute([$evaluator_id]);
+        $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        // Stats
+        $assigned = $this->evaluationModel->getAssignedProposals($evaluator_id);
+
+        $totalAssigned = count($assigned);
+        $evaluated = 0;
+        $pending = 0;
+
+        foreach ($assigned as $row) {
+            $vote = $this->evaluationModel->getBySubmissionAndEvaluator($row['submission_id'], $evaluator_id, 'proposal');
+            if ($vote) {
+                $evaluated++;
+            } else {
+                $pending++;
+            }
+        }
+
+        $this->render('dashboard', [
+            'currentUser'    => $currentUser,
+            'totalAssigned'  => $totalAssigned,
+            'evaluated'      => $evaluated,
+            'pending'        => $pending,
+        ]);
+    }
+
+    // ===== EVALUATIONS PAGE (Assigned table) =====
+    public function evaluations()
+    {
+        $evaluator_id = $_SESSION['user_id'];
+
+        // Fetch current user
+        $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
+        $stmt->execute([$evaluator_id]);
+        $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        // Get assigned proposals
         $assigned = $this->evaluationModel->getAssignedProposals($evaluator_id);
 
         $grouped = [];
         foreach ($assigned as $row) {
             $sid = $row['submission_id'];
-
-            // Fetch proposal vote for this evaluator
             $vote = $this->evaluationModel->getBySubmissionAndEvaluator($sid, $evaluator_id, 'proposal');
 
-            // Fetch progress reports
             $progress = $this->progressReportModel->getBySubmission($sid);
             foreach ($progress as &$pr) {
                 $v = $this->evaluationModel->getBySubmissionAndEvaluator($pr['id'], $evaluator_id, 'progress');
@@ -46,7 +85,6 @@ class DashboardController extends \EvaluatorBaseController
             }
             unset($pr);
 
-            // Fetch terminal report
             $terminal = $this->terminalReportModel->getBySubmission($sid);
             if ($terminal) {
                 $v = $this->evaluationModel->getBySubmissionAndEvaluator($terminal['id'], $evaluator_id, 'terminal');
@@ -67,6 +105,59 @@ class DashboardController extends \EvaluatorBaseController
             ];
         }
 
-        $this->render('dashboard', ['grouped' => $grouped]);
+        $this->render('evaluations', [
+            'grouped' => $grouped,
+            'currentUser' => $currentUser,
+        ]);
+    }
+
+    public function updateProfile()
+    {
+        $user_id = $_SESSION['user_id'];
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $profile_picture = null;
+
+        if (!$name || !$email) {
+            $_SESSION['profile_error'] = 'Name and email are required.';
+            header('Location: /evaluator/dashboard');
+            exit;
+        }
+
+        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/profiles/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
+            $filename = time() . '_' . uniqid() . '.' . $ext;
+            $destination = $uploadDir . $filename;
+            move_uploaded_file($_FILES['profile_picture']['tmp_name'], $destination);
+            $profile_picture = $destination;
+        }
+
+        $sql = "UPDATE users SET name = ?, email = ?";
+        $params = [$name, $email];
+
+        if ($password) {
+            $sql .= ", password = ?";
+            $params[] = password_hash($password, PASSWORD_DEFAULT);
+        }
+        if ($profile_picture) {
+            $sql .= ", profile_picture = ?";
+            $params[] = $profile_picture;
+        }
+        $sql .= " WHERE id = ?";
+        $params[] = $user_id;
+
+        $stmt = $this->db->prepare($sql);
+        if ($stmt->execute($params)) {
+            $_SESSION['user_name']  = $name;
+            $_SESSION['user_email'] = $email;
+            $_SESSION['success'] = 'Profile updated successfully.';
+        } else {
+            $_SESSION['profile_error'] = 'Failed to update profile.';
+        }
+        header('Location: /evaluator/dashboard');
+        exit;
     }
 }

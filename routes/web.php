@@ -12,3 +12,6 @@ $routes['/events'] = ['controller' => 'EventsController', 'action' => 'index'];
 $routes['/events/show'] = ['controller' => 'EventsController', 'action' => 'show'];
 
 $postRoutes['/notifications/mark-all-read'] = ['NotificationController', 'markAllRead'];
+$routes['/forgot-password']    = ['controller' => 'AuthController', 'action' => 'showForgotForm'];
+$routes['/verify-reset-otp']   = ['controller' => 'AuthController', 'action' => 'showVerifyResetOtp'];
+$routes['/reset-password']     = ['controller' => 'AuthController', 'action' => 'showResetForm'];

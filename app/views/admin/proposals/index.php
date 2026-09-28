@@ -15,11 +15,26 @@
         </div>
         <a href="/admin/proposal/create" class="btn btn-primary"><i class="fas fa-plus"></i> Add Proposal</a>
     </div>
+     <form method="GET" action="/admin/proposal" style="margin-bottom:15px; display:flex; gap:10px; align-items:end;">
+        <div>
+            <label>Academic Year</label>
+            <select name="academic_year_id" class="form-input" onchange="this.form.submit()">
+                <option value="">All Years</option>
+                <?php foreach ($years as $y): ?>
+                    <option value="<?= $y['id'] ?>" <?= ($selected_year ?? '') == $y['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($y['year_label']) ?>
+                        <?= $y['is_current'] ? ' (Current)' : '' ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </form>
 
     <table>
         <thead>
             <tr>
                 <th>#</th>
+                <th>Academic Year</th>
                 <th>Title</th>
                 <th>College</th>
                 <th>Category</th>
@@ -38,6 +53,7 @@
                 <?php foreach ($proposals as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
+                          <td><?= htmlspecialchars($item['academic_year_label'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($item['title']) ?></td>
                         <td><?= htmlspecialchars($item['college_abbr'] ?? 'N/A') ?></td>
                         <td><?= str_replace('_', ' ', ucfirst($item['category'])) ?></td>
