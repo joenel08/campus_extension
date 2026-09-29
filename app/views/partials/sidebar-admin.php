@@ -35,6 +35,9 @@
           <i class="fas fa-chevron-down dropdown-icon"></i>
         </div>
         <div class="dropdown-content" id="settingsMenu">
+          <a href="/admin/templates" class="sub-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/templates') === 0 ? 'active' : '' ?>">
+            <i class="fas fa-file-alt"></i> Templates & Attachments
+          </a>
           <a href="/admin/evaluation" class="sub-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/evaluation') === 0 ? 'active' : '' ?>">
             <i class="fas fa-check-circle"></i> Evaluation Criteria
           </a>

@@ -31,7 +31,13 @@
     </div>
 
     <div class="hero-right">
-        <div class="hero-campus"><i class="fas fa-location-dot"></i> ISU Cabagan Campus</div>
+        <div class="hero-campus" 
+     onclick="openMapModal()" 
+     style="cursor:pointer; transition:0.25s;"
+     onmouseover="this.style.background='rgba(255,255,255,0.22)'"
+     onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+    <i class="fas fa-location-dot"></i> ISU Cabagan Campus
+</div>
         <div class="hero-date"><i class="fas fa-calendar"></i> <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
         <div>
             <button onclick="openProfileModal()" style="padding:10px 18px; border:none; border-radius:8px; background:#fff; color:#183153; font-weight:600; cursor:pointer;">
@@ -122,10 +128,66 @@
         </form>
     </div>
 </div>
+<!-- MAP MODAL -->
+<div id="mapModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:900px; width:90%; padding:20px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-map-marker-alt"></i> ISU Cabagan Campus Location</h3>
+            <button class="close-modal" onclick="closeMapModal()">&times;</button>
+        </div>
 
+        <div style="border-radius:12px; overflow:hidden; height:500px;">
+            <iframe 
+                src="https://www.google.com/maps?q=Isabela+State+University+Cabagan+Campus&output=embed"
+                width="100%" 
+                height="500" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+        <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <strong>Isabela State University — Cabagan Campus</strong><br>
+                <span style="font-size:13px; color:#6b7280;">
+                    Cabagan, Isabela, Philippines
+                </span>
+            </div>
+            <a href="https://www.google.com/maps/search/?api=1&query=Isabela+State+University+Cabagan+Campus" 
+               target="_blank" 
+               rel="noopener"
+               class="btn btn-primary">
+                <i class="fas fa-external-link-alt"></i> Open in Google Maps
+            </a>
+        </div>
+    </div>
+</div>
 <script>
     function openProfileModal() { document.getElementById('profileModal').style.display = 'flex'; }
     function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+      function openMapModal() {
+    document.getElementById('mapModal').style.display = 'flex';
+}
+
+function closeMapModal() {
+    document.getElementById('mapModal').style.display = 'none';
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('mapModal');
+    if (e.target === modal) modal.style.display = 'none';
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('mapModal');
+        if (modal) modal.style.display = 'none';
+    }
+});
     document.addEventListener('click', function(e) {
         const modal = document.getElementById('profileModal');
         if (e.target === modal) modal.style.display = 'none';

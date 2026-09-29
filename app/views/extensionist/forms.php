@@ -111,11 +111,19 @@
         justify-content: center;
         gap: 6px;
         transition: 0.25s;
+        margin-top: auto;
     }
 
     .download-btn:hover {
         background: #ecfdf5;
         border-color: #16a34a;
+    }
+
+    .download-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        border-color: #d1d5db;
+        color: #9ca3af;
     }
 
     @media (max-width: 1200px) {
@@ -133,111 +141,56 @@
 
 <div class="forms-grid">
 
-    <!-- CARD 1: Proposal Capsule Template -->
-    <div class="form-template-card">
-        <div class="template-title">Proposal Report</div>
-        <div class="template-code">Template Code: 25-c34a7</div>
-        <div class="template-desc">Standard proposal report format.</div>
-        <div class="template-file">
-            <div class="file-left">
-                <i class="fas fa-file-word"></i>
-                <span class="file-name">Proposal Template</span>
-            </div>
-            <div class="template-badge">Capsule</div>
-        </div>
-        <div class="template-info">
-            <span>0.6 mb</span>
-            <span>Word</span>
-        </div>
-        <a href="/templates/proposal_template.docx" download class="download-btn">
-            <i class="fas fa-download"></i> Download
-        </a>
-    </div>
+    <?php if (empty($templates)): ?>
+        <p style="grid-column:1/-1; text-align:center; color:#777; padding:40px 0;">
+            No templates available yet.
+        </p>
+    <?php else: ?>
+        <?php foreach ($templates as $t): ?>
+            <?php
+            // Pick the icon based on file type
+            $icon = 'fa-file';
+            $badgeClass = '';
+            $type = strtolower($t['file_type'] ?? '');
 
-   
+            if ($type === 'word')       $icon = 'fa-file-word';
+            elseif ($type === 'excel')  { $icon = 'fa-file-excel'; $badgeClass = 'excel'; }
+            elseif ($type === 'powerpoint') $icon = 'fa-file-powerpoint';
+            elseif ($type === 'pdf')    $icon = 'fa-file-pdf';
+            ?>
+            <div class="form-template-card">
+                <div class="template-title"><?= htmlspecialchars($t['title']) ?></div>
+                <div class="template-code">Template Code: <?= htmlspecialchars($t['template_code']) ?></div>
+                <div class="template-desc"><?= htmlspecialchars($t['description'] ?? '') ?></div>
 
-    <!-- CARD 3: Progress Report Template -->
-    <div class="form-template-card">
-        <div class="template-title">Progress Report</div>
-        <div class="template-code">Template Code: PRG-2026</div>
-        <div class="template-desc">Standard progress report format for approved proposals.</div>
-        <div class="template-file">
-            <div class="file-left">
-                <i class="fas fa-file-word"></i>
-                <span class="file-name">Progress Template</span>
-            </div>
-            <div class="template-badge">Progress</div>
-        </div>
-        <div class="template-info">
-            <span>0.05 mb</span>
-            <span>Word</span>
-        </div>
-        <a href="/templates/progress_report_template.docx" download class="download-btn">
-            <i class="fas fa-download"></i> Download
-        </a>
-    </div>
+                <div class="template-file">
+                    <div class="file-left">
+                        <i class="fas <?= $icon ?>"></i>
+                        <span class="file-name"><?= htmlspecialchars($t['title']) ?></span>
+                    </div>
+                    <?php if (!empty($t['file_type'])): ?>
+                        <div class="template-badge <?= $badgeClass ?>">
+                            <?= htmlspecialchars($t['file_type']) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
-    <!-- CARD 4: Terminal Report Template -->
-    <div class="form-template-card">
-        <div class="template-title">Terminal Report</div>
-        <div class="template-code">Template Code: TRM-2026</div>
-        <div class="template-desc">Final terminal report format for completed projects.</div>
-        <div class="template-file">
-            <div class="file-left">
-                <i class="fas fa-file-word"></i>
-                <span class="file-name">Terminal Template</span>
-            </div>
-            <div class="template-badge">Terminal</div>
-        </div>
-        <div class="template-info">
-            <span>0.04 mb</span>
-            <span>Word</span>
-        </div>
-        <a href="/templates/terminal_report_template.docx" download class="download-btn">
-            <i class="fas fa-download"></i> Download
-        </a>
-    </div>
+                <div class="template-info">
+                    <span><?= htmlspecialchars($t['file_size'] ?? '—') ?></span>
+                    <span><?= htmlspecialchars($t['file_type'] ?? '—') ?></span>
+                </div>
 
-    <!-- CARD 5: HDGD Scoresheet -->
-    <!-- <div class="form-template-card">
-        <div class="template-title">2026 HDGD</div>
-        <div class="template-code">Template Code: HDGD-001</div>
-        <div class="template-desc">Evaluation scoring template.</div>
-        <div class="template-file">
-            <div class="file-left">
-                <i class="fas fa-file-excel"></i>
-                <span class="file-name">Evaluation Sheet</span>
+                <?php if (!empty($t['attached_file'])): ?>
+                    <a href="/<?= htmlspecialchars($t['attached_file']) ?>" download class="download-btn">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                <?php else: ?>
+                    <button class="download-btn disabled" disabled>
+                        <i class="fas fa-ban"></i> No File
+                    </button>
+                <?php endif; ?>
             </div>
-            <div class="template-badge excel">Scoresheet</div>
-        </div>
-        <div class="template-info">
-            <span>0.61 mb</span>
-            <span>Excel</span>
-        </div>
-        <a href="/templates/evaluation_scoresheet_hdgd.xlsx" download class="download-btn">
-            <i class="fas fa-download"></i> Download
-        </a>
-    </div> -->
-
-    <!-- CARD 6: HDGD PIMME Scoresheet -->
-    <!-- <div class="form-template-card">
-        <div class="template-title">HDGD PIMME</div>
-        <div class="template-code">Template Code: HDGD</div>
-        <div class="template-desc">HDGD-PIMME evaluation sheet.</div>
-        <div class="template-file">
-            <div class="file-left">
-                <i class="fas fa-file-excel"></i>
-                <span class="file-name">PIMME Sheet</span>
-            </div>
-            <div class="template-badge excel">Scoresheet</div>
-        </div>
-        <div class="template-info">
-            <span>0.61 mb</span>
-            <span>Excel</span>
-        </div>
-        <a href="/templates/hdgd_pimme_scoresheet.xlsx" download class="download-btn">
-            <i class="fas fa-download"></i> Download
-        </a>
-    </div> -->
+        <?php endforeach; ?>
+    <?php endif; ?>
 
 </div>

@@ -143,6 +143,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($url === '/admin/templates/store') {
+    $controller = new \Admin\TemplateController();
+    $controller->store();
+    exit;
+}
+if ($url === '/admin/templates/update') {
+    $controller = new \Admin\TemplateController();
+    $controller->update();
+    exit;
+}
+if ($url === '/admin/templates/delete') {
+    $controller = new \Admin\TemplateController();
+    $controller->delete();
+    exit;
+}
+if ($url === '/admin/templates/toggle') {
+    $controller = new \Admin\TemplateController();
+    $controller->toggleStatus();
+    exit;
+}
+
     // Map POST URLs to controller actions
     $postRoutes = [
 

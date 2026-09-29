@@ -46,3 +46,4 @@ $routes['/admin/monitoring'] = ['controller' => 'Admin\\MonitoringController', '
 $routes['/admin/submissions/show'] = ['controller' => 'Admin\\MonitoringController', 'action' => 'show'];
 
 $routes['/admin/monitoring/assign-modal'] = ['controller' => 'Admin\\MonitoringController', 'action' => 'assignModal'];
+$routes['/admin/templates'] = ['controller' => 'Admin\\TemplateController', 'action' => 'index'];

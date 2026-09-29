@@ -188,10 +188,10 @@
     <?php else: ?>
         <img src="<?= htmlspecialchars($banner_url) ?>" alt="Banner" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:-2;">
     <?php endif; ?>
-    <div class="hero-content">
-        <h1>Extension & Training Services</h1>
-        <p>Bridging academic excellence with community development.</p>
-    </div>
+   <div class="hero-content">
+    <h1><?= htmlspecialchars($banner_title) ?></h1>
+    <p><?= htmlspecialchars($banner_subtitle) ?></p>
+</div>
 </section>
 
 <!-- NEWS SECTION -->

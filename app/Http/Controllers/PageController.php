@@ -30,11 +30,15 @@ class PageController
         // ---- Banner ----
         $banner = $bannerModel->get();
         if ($banner) {
-            $banner_type = $banner['type'];
-            $banner_url  = $banner['media_path'];
+            $banner_type     = $banner['type'];
+            $banner_url      = $banner['media_path'];
+            $banner_title    = $banner['title'] ?? 'Extension & Training Services';
+            $banner_subtitle = $banner['subtitle'] ?? 'Bridging academic excellence with community development.';
         } else {
-            $banner_type = 'image';
-            $banner_url  = '/images/default-banner.jpg';
+            $banner_type     = 'image';
+            $banner_url      = '/images/default-banner.jpg';
+            $banner_title    = 'Extension & Training Services';
+            $banner_subtitle = 'Bridging academic excellence with community development.';
         }
 
         // ---- News (latest 4 published) ----

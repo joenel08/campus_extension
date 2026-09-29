@@ -6,14 +6,138 @@
     <div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']) ?></div>
     <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
+<style>
+@media print {
 
+    /* Hide sidebar, topbar, buttons, filters, modals */
+    .sidebar,
+    .sidebar-top,
+    .sidebar-nav,
+    .sidebar-bottom,
+    .topbar,
+    .notification-wrapper,
+    .filter-bar,
+    .table-header button,
+    .btn,
+    .modal,
+    .alert,
+    form,
+    .notification-panel {
+        display: none !important;
+    }
+
+    /* Reset layout - remove sidebar offset */
+    body {
+        background: #fff !important;
+        display: block !important;
+    }
+
+    .main {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Card styling for print */
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    /* Print header */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #000;
+    }
+
+    .print-header h1 {
+        font-size: 20px;
+        margin: 0 0 5px;
+        color: #000;
+    }
+
+    .print-header p {
+        font-size: 13px;
+        color: #333;
+        margin: 2px 0;
+    }
+
+    /* Table styling for print */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+        page-break-inside: auto;
+    }
+
+    thead {
+        display: table-header-group; /* repeat header on each page */
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+    th, td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+        text-align: left !important;
+        color: #000 !important;
+    }
+
+    th {
+        background: #f0f0f0 !important;
+        font-weight: 700 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Badges: keep colors for status */
+    .badge {
+        padding: 2px 6px !important;
+        border-radius: 0 !important;
+        font-size: 10px !important;
+        border: 1px solid #000;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Hide action buttons inside table cells */
+    td a.btn,
+    td button.btn {
+        display: none !important;
+    }
+
+    /* Adjust page margins */
+    @page {
+        size: A4 landscape;
+        margin: 15mm;
+    }
+}
+
+/* Hide print header on screen */
+.print-header {
+    display: none;
+}
+</style>
 <div class="card">
+    <div class="print-header">
+    <h1>Isabela State University — Extension & Training Services</h1>
+    <p>Submission Monitoring Report</p>
+    <p>Generated: <?= date('F d, Y h:i A') ?></p>
+</div>
     <div class="table-header">
         <div>
             <h2><i class="fas fa-folder-open"></i> Submission Monitoring</h2>
             <p class="table-subtitle">View proposals, progress, and terminal reports grouped by proposal</p>
         </div>
-        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+       <button class="btn btn-secondary print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
     </div>
 
     <!-- Filters (unchanged) -->
