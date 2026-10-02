@@ -27,11 +27,11 @@ class User
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     public function find($id)
-{
-    $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$id]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
     // public function find($id)
     // {
@@ -96,5 +96,17 @@ class User
     public function verifyPassword($plain, $hash)
     {
         return password_verify($plain, $hash);
+    }
+
+    public function updateActivity($id)
+    {
+        $stmt = $this->db->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+    public function isOnline($last_activity, $threshold_seconds = 120)
+    {
+        if (empty($last_activity)) return false;
+        return (time() - strtotime($last_activity)) <= $threshold_seconds;
     }
 }

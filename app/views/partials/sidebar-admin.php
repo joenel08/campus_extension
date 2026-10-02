@@ -29,7 +29,25 @@
         <div class="nav-left"><i class="fas fa-users"></i><span>Manage User Accounts</span></div>
       </a>
 
-      <div class="nav-dropdown">
+       <div class="nav-dropdown">
+        <div class="nav-item" onclick="toggleDropdown('settingsMenu')">
+          <div class="nav-left"><i class="fas fa-cogs"></i><span>Templates</span></div>
+          <i class="fas fa-chevron-down dropdown-icon"></i>
+        </div>
+        <div class="dropdown-content" id="settingsMenu">
+          <a href="/admin/templates" class="sub-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/templates') === 0 ? 'active' : '' ?>">
+            <i class="fas fa-file-alt"></i> Forms
+          </a>
+          <!-- <a href="/admin/evaluation" class="sub-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/evaluation') === 0 ? 'active' : '' ?>">
+            <i class="fas fa-check-circle"></i> Evaluation Criteria
+          </a> -->
+          <a href="/admin/proposal" class="sub-item <?= strpos($_SERVER['REQUEST_URI'], '/admin/proposal') === 0 ? 'active' : '' ?>">
+            <i class="fas fa-file-alt"></i> Call for Proposals
+          </a>
+        </div>
+      </div>
+
+      <!-- <div class="nav-dropdown">
         <div class="nav-item" onclick="toggleDropdown('settingsMenu')">
           <div class="nav-left"><i class="fas fa-cogs"></i><span>Manage System Settings</span></div>
           <i class="fas fa-chevron-down dropdown-icon"></i>
@@ -45,7 +63,7 @@
             <i class="fas fa-file-alt"></i> Call for Proposals
           </a>
         </div>
-      </div>
+      </div> -->
 
       <div class="nav-dropdown">
         <div class="nav-item" onclick="toggleDropdown('postsMenu')">

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISU Extension Services</title>
+    <title>Community Engagement Services</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/app.css">
     <link rel="icon" type="image/x-icon" href="/images/isu_logo.png">
@@ -21,7 +21,7 @@
             <a href="/">
                 <div class="logo-text">
                     <h4>Republic of the Philippines</h4>
-                    <h1>ISABELA STATE UNIVERSITY</h1>
+                    <h1>ISU-C Community Engagement Services</h1>
                     <p>Cabagan Campus</p>
                 </div>
             </a>

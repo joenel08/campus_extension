@@ -6,7 +6,29 @@
     <div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']) ?></div>
     <?php unset($_SESSION['error']); ?>
 <?php endif; ?>
+<style>
+    .badge-online {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #86efac;
+    }
 
+    .badge-online i {
+        color: #22c55e;
+        margin-right: 4px;
+    }
+
+    .badge-offline {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+    }
+
+    .badge-offline i {
+        color: #9ca3af;
+        margin-right: 4px;
+    }
+</style>
 <div class="card">
     <div class="table-header">
         <div>
@@ -50,22 +72,25 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>College</th>
-                <th>Status</th>
+                <!-- <th>Status</th> -->
+                <th>Activity</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($users)): ?>
-                <tr><td colspan="7" style="text-align:center;color:#777;">No users found.</td></tr>
+                <tr>
+                    <td colspan="7" style="text-align:center;color:#777;">No users found.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($users as $index => $user): ?>
-                <tr>
-                    <td><?= $index + 1 ?></td>
-                    <td><?= htmlspecialchars($user['name']) ?></td>
-                    <td><?= htmlspecialchars($user['email']) ?></td>
-                    <td><?= htmlspecialchars($user['role']) ?></td>
-                    <td><?= htmlspecialchars($user['college_abbr'] ?? '-') ?></td>
-                    <td>
+                    <tr>
+                        <td><?= $index + 1 ?></td>
+                        <td><?= htmlspecialchars($user['name']) ?></td>
+                        <td><?= htmlspecialchars($user['email']) ?></td>
+                        <td><?= htmlspecialchars($user['role']) ?></td>
+                        <td><?= htmlspecialchars($user['college_abbr'] ?? '-') ?></td>
+                        <!-- <td>
                         <?php if ($user['role'] === 'admin'): ?>
                             <span class="badge badge-admin">Admin</span>
                         <?php else: ?>
@@ -79,31 +104,42 @@
                                 <span class="badge badge-unknown"><?= $user['status'] ?></span>
                             <?php endif; ?>
                         <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php if ($user['role'] !== 'admin'): ?>
-                            <?php if ($user['status'] === 'pending'): ?>
-                                <form method="POST" action="/admin/accounts/approve" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?= $user['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this account?')">Approve</button>
-                                </form>
-                                <form method="POST" action="/admin/accounts/decline" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?= $user['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Decline this account?')">Decline</button>
-                                </form>
+                    </td> -->
+                        <td>
+                            <?php if (!empty($user['last_activity']) && (time() - strtotime($user['last_activity'])) <= 120): ?>
+                                <span class="badge badge-online" title="Last active: <?= date('M d, Y H:i', strtotime($user['last_activity'])) ?>">
+                                    <i class="fas fa-circle" style="font-size:8px;"></i> Online
+                                </span>
+                            <?php else: ?>
+                                <span class="badge badge-offline" title="<?= !empty($user['last_activity']) ? 'Last active: ' . date('M d, Y H:i', strtotime($user['last_activity'])) : 'Never active' ?>">
+                                    <i class="fas fa-circle" style="font-size:8px;"></i> Offline
+                                </span>
                             <?php endif; ?>
-                            <button class="btn btn-sm btn-edit" onclick="openEditModal(<?= htmlspecialchars(json_encode($user)) ?>)">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form method="POST" action="/admin/accounts/delete" style="display:inline;" onsubmit="return confirm('Delete this account?')">
-                                <input type="hidden" name="id" value="<?= $user['id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                            </form>
-                        <?php else: ?>
-                            <span style="color:#999;">—</span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
+                        </td>
+                        <td>
+                            <?php if ($user['role'] !== 'admin'): ?>
+                                <?php if ($user['status'] === 'pending'): ?>
+                                    <form method="POST" action="/admin/accounts/approve" style="display:inline;">
+                                        <input type="hidden" name="id" value="<?= $user['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this account?')">Approve</button>
+                                    </form>
+                                    <form method="POST" action="/admin/accounts/decline" style="display:inline;">
+                                        <input type="hidden" name="id" value="<?= $user['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Decline this account?')">Decline</button>
+                                    </form>
+                                <?php endif; ?>
+                                <button class="btn btn-sm btn-edit" onclick="openEditModal(<?= htmlspecialchars(json_encode($user)) ?>)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form method="POST" action="/admin/accounts/delete" style="display:inline;" onsubmit="return confirm('Delete this account?')">
+                                    <input type="hidden" name="id" value="<?= $user['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            <?php else: ?>
+                                <span style="color:#999;">—</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
         </tbody>

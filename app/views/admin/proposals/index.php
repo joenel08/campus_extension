@@ -36,8 +36,8 @@
                 <th>#</th>
                 <th>Academic Year</th>
                 <th>Title</th>
-                <th>College</th>
-                <th>Category</th>
+                <!-- <th>College</th> -->
+                <!-- <th>Category</th> -->
                 <th>Status</th>
                 <th>Opening Date</th>
                 <th>Closing Date</th>
@@ -55,8 +55,8 @@
                         <td><?= $index + 1 ?></td>
                           <td><?= htmlspecialchars($item['academic_year_label'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($item['title']) ?></td>
-                        <td><?= htmlspecialchars($item['college_abbr'] ?? 'N/A') ?></td>
-                        <td><?= str_replace('_', ' ', ucfirst($item['category'])) ?></td>
+                        <!-- <td><?= htmlspecialchars($item['college_abbr'] ?? 'N/A') ?></td> -->
+                        <!-- <td><?= str_replace('_', ' ', ucfirst($item['category'])) ?></td> -->
                         <td>
                             <?php if ($item['status'] === 'open'): ?>
                                 <span class="badge badge-approved">Open</span>

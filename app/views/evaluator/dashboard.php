@@ -38,7 +38,7 @@
      onmouseout="this.style.background='rgba(255,255,255,0.12)'">
     <i class="fas fa-location-dot"></i> ISU Cabagan Campus
 </div>
-        <div class="hero-date"><i class="fas fa-calendar"></i> <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
+        <div class="hero-date"><i class="fas fa-calendar"></i>Academic Year: <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
         <div>
             <button onclick="openProfileModal()" style="padding:10px 18px; border:none; border-radius:8px; background:#fff; color:#183153; font-weight:600; cursor:pointer;">
                 <i class="fas fa-user-edit"></i> Edit Profile

@@ -252,7 +252,7 @@
 <!-- ABOUT -->
 <section class="about-extension" id="about">
     <div class="container">
-        <h2>About Extension and Training Services</h2>
+        <h2>Community Engagement Services</h2>
         <p><?= nl2br(htmlspecialchars($about['about_description'] ?? '')) ?></p>
 
         <h3>Objectives</h3>

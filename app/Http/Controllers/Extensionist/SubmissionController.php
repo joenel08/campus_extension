@@ -501,18 +501,66 @@ class SubmissionController extends \ExtensionistBaseController
         exit;
     }
 
+    // public function show()
+    // {
+    //     $id = $_GET['id'] ?? 0;
+    //     $user_id = $_SESSION['user_id'];
+    //     $submission = $this->submissionModel->find($id, $user_id);
+    //     if (!$submission) {
+    //         $_SESSION['error'] = 'Submission not found.';
+    //         header('Location: /extensionist/submissions');
+    //         exit;
+    //     }
+    //     $form_data = json_decode($submission['form_data'], true);
+    //     $this->render('submissions/show', ['submission' => $submission, 'form_data' => $form_data]);
+    // }
+
     public function show()
     {
         $id = $_GET['id'] ?? 0;
         $user_id = $_SESSION['user_id'];
         $submission = $this->submissionModel->find($id, $user_id);
+
         if (!$submission) {
             $_SESSION['error'] = 'Submission not found.';
             header('Location: /extensionist/submissions');
             exit;
         }
+
         $form_data = json_decode($submission['form_data'], true);
-        $this->render('submissions/show', ['submission' => $submission, 'form_data' => $form_data]);
+
+        // Load vote model
+        require_once __DIR__ . '/../../../models/EvaluatorVote.php';
+        $voteModel = new \EvaluatorVote($this->db);
+
+        // Votes on the proposal itself
+        $proposalVotes = $voteModel->getVotesForSubmission($id, 'proposal');
+
+        // Votes on the linked progress reports
+        $progressVotes = [];
+        $progressReports = $this->progressReportModel->getBySubmission($id);
+        foreach ($progressReports as $pr) {
+            $progressVotes[$pr['id']] = [
+                'report' => $pr,
+                'votes'  => $voteModel->getVotesForSubmission($pr['id'], 'progress'),
+            ];
+        }
+
+        // Votes on the linked terminal report
+        $terminalReport = $this->terminalReportModel->getBySubmission($id);
+        $terminalVotes = [];
+        if ($terminalReport) {
+            $terminalVotes = $voteModel->getVotesForSubmission($terminalReport['id'], 'terminal');
+        }
+
+        $this->render('submissions/show', [
+            'submission'      => $submission,
+            'form_data'       => $form_data,
+            'proposalVotes'   => $proposalVotes,
+            'progressVotes'   => $progressVotes,
+            'terminalReport'  => $terminalReport,
+            'terminalVotes'   => $terminalVotes,
+        ]);
     }
 
     private function buildFormData($post, $report_type)
@@ -549,17 +597,17 @@ class SubmissionController extends \ExtensionistBaseController
                 'budget'              => $post['budget'] ?? 0,
             ];
 
-            $data['budget_breakdown'] = [
-                'year1_ps'   => $post['year1_ps'] ?? 0,
-                'year1_mooe' => $post['year1_mooe'] ?? 0,
-                'year1_co'   => $post['year1_co'] ?? 0,
-                'year2_ps'   => $post['year2_ps'] ?? 0,
-                'year2_mooe' => $post['year2_mooe'] ?? 0,
-                'year2_co'   => $post['year2_co'] ?? 0,
-                'year3_ps'   => $post['year3_ps'] ?? 0,
-                'year3_mooe' => $post['year3_mooe'] ?? 0,
-                'year3_co'   => $post['year3_co'] ?? 0,
-            ];
+            // $data['budget_breakdown'] = [
+            //     'year1_ps'   => $post['year1_ps'] ?? 0,
+            //     'year1_mooe' => $post['year1_mooe'] ?? 0,
+            //     'year1_co'   => $post['year1_co'] ?? 0,
+            //     'year2_ps'   => $post['year2_ps'] ?? 0,
+            //     'year2_mooe' => $post['year2_mooe'] ?? 0,
+            //     'year2_co'   => $post['year2_co'] ?? 0,
+            //     'year3_ps'   => $post['year3_ps'] ?? 0,
+            //     'year3_mooe' => $post['year3_mooe'] ?? 0,
+            //     'year3_co'   => $post['year3_co'] ?? 0,
+            // ];
 
             $data['components'] = $components;
         } elseif ($report_type === 'progress') {

@@ -37,6 +37,22 @@ if (isset($_SESSION['user_role'])) {
     }
 }
 
+// Handle heartbeat BEFORE route matching
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && strtok($_SERVER['REQUEST_URI'], '?') === '/heartbeat'
+) {
+    if (isset($_SESSION['user_id'])) {
+        $config = require __DIR__ . '/../config/database.php';
+        $pdo = new PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
+        $stmt = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+    }
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // --- NEW: Handle POST requests ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $url = strtok($_SERVER['REQUEST_URI'], '?');
@@ -144,25 +160,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($url === '/admin/templates/store') {
-    $controller = new \Admin\TemplateController();
-    $controller->store();
-    exit;
-}
-if ($url === '/admin/templates/update') {
-    $controller = new \Admin\TemplateController();
-    $controller->update();
-    exit;
-}
-if ($url === '/admin/templates/delete') {
-    $controller = new \Admin\TemplateController();
-    $controller->delete();
-    exit;
-}
-if ($url === '/admin/templates/toggle') {
-    $controller = new \Admin\TemplateController();
-    $controller->toggleStatus();
-    exit;
-}
+        $controller = new \Admin\TemplateController();
+        $controller->store();
+        exit;
+    }
+    if ($url === '/admin/templates/update') {
+        $controller = new \Admin\TemplateController();
+        $controller->update();
+        exit;
+    }
+    if ($url === '/admin/templates/delete') {
+        $controller = new \Admin\TemplateController();
+        $controller->delete();
+        exit;
+    }
+    if ($url === '/admin/templates/toggle') {
+        $controller = new \Admin\TemplateController();
+        $controller->toggleStatus();
+        exit;
+    }
 
     // Map POST URLs to controller actions
     $postRoutes = [

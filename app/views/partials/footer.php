@@ -11,13 +11,13 @@
 
         <div>
           <h2>ISABELA STATE UNIVERSITY</h2>
-          <p>Extension & Training Services</p>
+          <p>Community Engagement Services</p>
         </div>
 
       </div>
 
       <p class="footer-text">
-        Isabela State University Extension and Training Services
+        Isabela State University Community Engagement Services
         is committed to empowering communities through innovation,
         education, sustainable development, and public service.
       </p>
@@ -49,7 +49,7 @@
 
   <!-- BOTTOM -->
   <div class="footer-bottom">
-    © 2026 Isabela State University — Extension & Training Services. All Rights Reserved.
+    © 2026 Isabela State University — Community Engagement Services . All Rights Reserved.
   </div>
 
 </footer>

@@ -7,7 +7,7 @@ $proposalData = ($report_type === 'proposal')
     : ($parentFormData ?? []);
 
 $basic = $proposalData['basic_info'] ?? [];
-$budget = $proposalData['budget_breakdown'] ?? [];
+// $budget = $proposalData['budget_breakdown'] ?? [];
 $components = $proposalData['components'] ?? [];
 
 $file_path = $submission['attachment'] ?? $submission['file_path'] ?? $form_data['attachment'] ?? null;
@@ -200,13 +200,13 @@ $file_path = $submission['attachment'] ?? $submission['file_path'] ?? $form_data
 
             <!-- === PROPOSAL-ONLY: Budget Breakdown === -->
             <?php if ($report_type === 'proposal'): ?>
-                <h4 style="margin:15px 0 8px; color:#2563eb;">Budget Breakdown</h4>
+                <!-- <h4 style="margin:15px 0 8px; color:#2563eb;">Budget Breakdown</h4>
                 <table style="width:100%; border-collapse:collapse; font-size:14px;">
                     <tr><th style="text-align:left;">Year</th><th style="text-align:right;">PS</th><th style="text-align:right;">MOOE</th><th style="text-align:right;">CO</th></tr>
                     <tr><td>Year 1</td><td style="text-align:right;"><?= number_format($budget['year1_ps'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year1_mooe'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year1_co'] ?? 0, 2) ?></td></tr>
                     <tr><td>Year 2</td><td style="text-align:right;"><?= number_format($budget['year2_ps'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year2_mooe'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year2_co'] ?? 0, 2) ?></td></tr>
                     <tr><td>Year 3</td><td style="text-align:right;"><?= number_format($budget['year3_ps'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year3_mooe'] ?? 0, 2) ?></td><td style="text-align:right;"><?= number_format($budget['year3_co'] ?? 0, 2) ?></td></tr>
-                </table>
+                </table> -->
             <?php endif; ?>
 
             <!-- === PROGRESS REPORT DATA === -->

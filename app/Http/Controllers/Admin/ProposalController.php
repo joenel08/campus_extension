@@ -96,52 +96,105 @@ class ProposalController extends \Controller
     //     header('Location: /admin/proposal');
     //     exit;
     // }
+    // public function store()
+    // {
+    //     $title = trim($_POST['title'] ?? '');
+    //     $college_id = $_POST['college_id'] ?? null;
+    //     $category = $_POST['category'] ?? 'internally_funded';
+    //     $status = $_POST['status'] ?? 'open';
+    //     $opening_date = $_POST['opening_date'] ?? '';
+    //     $closing_date = $_POST['closing_date'] ?? '';
+    //     $description = trim($_POST['description'] ?? '');
+    //     $file_path = '';
+    //     $academic_year_id = $_SESSION['academic_year_id'] ?? null;   // <-- FROM SESSION
+
+    //     if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
+    //         $file_path = $this->uploadFile($_FILES['file_path']);
+    //     }
+
+    //     if ($title && $opening_date && $closing_date && $college_id) {
+    //         $this->proposalModel->create(
+    //             $title,
+    //             $college_id,
+    //             $category,
+    //             $status,
+    //             $opening_date,
+    //             $closing_date,
+    //             $description,
+    //             $file_path,
+    //             $academic_year_id
+    //         );
+
+    //         $_SESSION['success'] = 'Proposal published successfully.';
+
+    //         $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
+    //         $this->notificationModel->createBulk(
+    //             $extensionistIds,
+    //             'call_for_proposal',
+    //             'New Call for Proposal',
+    //             'A new proposal call "' . $title . '" is now open. Deadline: ' . $closing_date,
+    //             '/extensionist/submissions'
+    //         );
+    //     } else {
+    //         $_SESSION['error'] = 'Title, college, opening date, and closing date are required.';
+    //     }
+
+    //     header('Location: /admin/proposal');
+    //     exit;
+    // }
+
     public function store()
-    {
-        $title = trim($_POST['title'] ?? '');
-        $college_id = $_POST['college_id'] ?? null;
-        $category = $_POST['category'] ?? 'internally_funded';
-        $status = $_POST['status'] ?? 'open';
-        $opening_date = $_POST['opening_date'] ?? '';
-        $closing_date = $_POST['closing_date'] ?? '';
-        $description = trim($_POST['description'] ?? '');
-        $file_path = '';
-        $academic_year_id = $_SESSION['academic_year_id'] ?? null;   // <-- FROM SESSION
+{
+    $title        = trim($_POST['title'] ?? '');
+    $closing_date = $_POST['closing_date'] ?? '';
+    $description  = trim($_POST['description'] ?? '');
+    $file_path    = '';
+    $academic_year_id = $_SESSION['academic_year_id'] ?? null;
 
-        if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
-            $file_path = $this->uploadFile($_FILES['file_path']);
-        }
+    // Auto values
+    $status       = 'open';
+    $opening_date = date('Y-m-d'); // today
 
-        if ($title && $opening_date && $closing_date && $college_id) {
-            $this->proposalModel->create(
-                $title,
-                $college_id,
-                $category,
-                $status,
-                $opening_date,
-                $closing_date,
-                $description,
-                $file_path,
-                $academic_year_id
-            );
-
-            $_SESSION['success'] = 'Proposal published successfully.';
-
-            $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist', $college_id);
-            $this->notificationModel->createBulk(
-                $extensionistIds,
-                'call_for_proposal',
-                'New Call for Proposal',
-                'A new proposal call "' . $title . '" is now open. Deadline: ' . $closing_date,
-                '/extensionist/submissions'
-            );
-        } else {
-            $_SESSION['error'] = 'Title, college, opening date, and closing date are required.';
-        }
-
-        header('Location: /admin/proposal');
-        exit;
+    if (isset($_FILES['file_path']) && $_FILES['file_path']['error'] === UPLOAD_ERR_OK) {
+        $file_path = $this->uploadFile($_FILES['file_path']);
     }
+
+    if ($title && $closing_date) {
+        // Optional: ensure deadline is after today
+        if (strtotime($closing_date) <= strtotime($opening_date)) {
+            $_SESSION['error'] = 'Submission deadline must be after today.';
+            header('Location: /admin/proposal/create');
+            exit;
+        }
+
+        $this->proposalModel->create(
+            $title,
+            $status,
+            $opening_date,
+            $closing_date,
+            $description,
+            $file_path,
+            $academic_year_id
+        );
+
+        $_SESSION['success'] = 'Proposal published successfully.';
+
+        // Notify all extensionists
+        $extensionistIds = $this->notificationModel->getUsersByRoleAndCollege('extensionist');
+        $this->notificationModel->createBulk(
+            $extensionistIds,
+            'call_for_proposal',
+            'New Call for Proposal',
+            'A new proposal call "' . $title . '" is now open. Deadline: ' . $closing_date,
+            '/extensionist/submissions'
+        );
+    } else {
+        $_SESSION['error'] = 'Title and submission deadline are required.';
+    }
+
+    header('Location: /admin/proposal');
+    exit;
+}
 
     public function edit()
     {

@@ -16,6 +16,14 @@ class EvaluatorBaseController
             $_SESSION['academic_year_id'] = $y['id'] ?? null;
             $_SESSION['academic_year_label'] = $y['year_label'] ?? 'N/A';
         }
+
+
+        if (isset($_SESSION['user_id'])) {
+            $config = require __DIR__ . '/../../../config/database.php';
+            $pdo = new PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
+            $stmt = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+        }
     }
 
     // protected function render($view, $data = [])

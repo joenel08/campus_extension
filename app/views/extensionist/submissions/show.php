@@ -12,7 +12,7 @@ $remarks = $form_data['admin_remarks'] ?? '';
         <div>
             <h2 style="color:#183153;"><i class="fas fa-file-alt"></i> Submission Details</h2>
             <p style="color:#6b7280;">
-                <?= ucfirst($submission['report_type']) ?> – 
+                <?= ucfirst($submission['report_type']) ?> –
                 <?= date('F d, Y', strtotime($submission['created_at'])) ?>
                 <?php if ($submission['proposal_id']): ?>
                     | Proposal ID: #<?= $submission['proposal_id'] ?>
@@ -132,7 +132,7 @@ $remarks = $form_data['admin_remarks'] ?? '';
         </div>
 
         <!-- BUDGET BREAKDOWN TABLE -->
-        <div class="submission-group full" style="background:#f8fafc; font-weight:700; font-size:16px; padding:15px 22px; border-top:1px solid #dfe5ec;">
+        <!-- <div class="submission-group full" style="background:#f8fafc; font-weight:700; font-size:16px; padding:15px 22px; border-top:1px solid #dfe5ec;">
             <i class="fas fa-table"></i> 8. Budget Requirement / Budget
         </div>
 
@@ -167,13 +167,130 @@ $remarks = $form_data['admin_remarks'] ?? '';
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
+        </div> -->
 
         <!-- Admin Remarks -->
         <?php if ($remarks): ?>
             <div class="submission-group full" style="background:#fff3cd; border-left:4px solid #ffc107;">
                 <div class="submission-label" style="color:#856404;">Admin Remarks</div>
                 <div class="submission-value" style="color:#856404;"><?= nl2br(htmlspecialchars($remarks)) ?></div>
+            </div>
+        <?php endif; ?>
+
+        <!-- ==================== EVALUATOR FEEDBACK ==================== -->
+        <?php
+        $hasAnyVotes = !empty($proposalVotes)
+            || !empty($terminalVotes)
+            || !empty(array_filter($progressVotes, fn($pv) => !empty($pv['votes'])));
+        ?>
+
+        <?php if ($hasAnyVotes): ?>
+            <div class="submission-group full" style="background:#f0f9ff; border-top:2px solid #bae6fd;">
+                <div class="submission-label" style="color:#0369a1; font-size:16px;">
+                    <i class="fas fa-users"></i> Evaluator Feedback
+                </div>
+            </div>
+
+            <!-- Proposal votes -->
+            <?php if (!empty($proposalVotes)): ?>
+                <div class="submission-group full" style="border-top:1px solid #dfe5ec;">
+                    <div class="submission-label" style="color:#183153;">
+                        <i class="fas fa-file-signature"></i> Proposal Evaluation
+                    </div>
+                    <div class="submission-value">
+                        <?php foreach ($proposalVotes as $v): ?>
+                            <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                    <strong><?= htmlspecialchars($v['evaluator_name'] ?? 'Evaluator') ?></strong>
+                                    <span class="badge <?= $v['vote'] === 'approve' ? 'badge-approved' : ($v['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
+                                        <?= $v['vote'] === 'approve' ? 'Approved' : ($v['vote'] === 'revision' ? 'Needs Improvement' : 'Declined') ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($v['comments'])): ?>
+                                    <p style="margin-top:8px; font-size:14px; color:#444; white-space:pre-wrap;">
+                                        <strong>Comments:</strong> <?= nl2br(htmlspecialchars($v['comments'])) ?>
+                                    </p>
+                                <?php else: ?>
+                                    <p style="margin-top:8px; font-size:13px; color:#999;">No comments provided.</p>
+                                <?php endif; ?>
+                                <span style="font-size:11px; color:#999; display:block; margin-top:6px;">
+                                    <?= date('M d, Y H:i', strtotime($v['submitted_at'] ?? $v['created_at'])) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Progress votes -->
+            <?php foreach ($progressVotes as $pid => $pv): ?>
+                <?php if (!empty($pv['votes'])): ?>
+                    <div class="submission-group full" style="border-top:1px solid #dfe5ec;">
+                        <div class="submission-label" style="color:#183153;">
+                            <i class="fas fa-chart-line"></i>
+                            Progress Report — <?= date('M d, Y', strtotime($pv['report']['report_date'])) ?>
+                        </div>
+                        <div class="submission-value">
+                            <?php foreach ($pv['votes'] as $v): ?>
+                                <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                        <strong><?= htmlspecialchars($v['evaluator_name'] ?? 'Evaluator') ?></strong>
+                                        <span class="badge <?= $v['vote'] === 'approve' ? 'badge-approved' : ($v['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
+                                            <?= $v['vote'] === 'approve' ? 'Approved' : ($v['vote'] === 'revision' ? 'Needs Improvement' : 'Declined') ?>
+                                        </span>
+                                    </div>
+                                    <?php if (!empty($v['comments'])): ?>
+                                        <p style="margin-top:8px; font-size:14px; color:#444; white-space:pre-wrap;">
+                                            <strong>Comments:</strong> <?= nl2br(htmlspecialchars($v['comments'])) ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <span style="font-size:11px; color:#999; display:block; margin-top:6px;">
+                                        <?= date('M d, Y H:i', strtotime($v['submitted_at'] ?? $v['created_at'])) ?>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+
+            <!-- Terminal votes -->
+            <?php if ($terminalReport && !empty($terminalVotes)): ?>
+                <div class="submission-group full" style="border-top:1px solid #dfe5ec;">
+                    <div class="submission-label" style="color:#183153;">
+                        <i class="fas fa-check-circle"></i>
+                        Terminal Report — <?= date('M d, Y', strtotime($terminalReport['completion_date'])) ?>
+                    </div>
+                    <div class="submission-value">
+                        <?php foreach ($terminalVotes as $v): ?>
+                            <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                    <strong><?= htmlspecialchars($v['evaluator_name'] ?? 'Evaluator') ?></strong>
+                                    <span class="badge <?= $v['vote'] === 'approve' ? 'badge-approved' : ($v['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
+                                        <?= $v['vote'] === 'approve' ? 'Approved' : ($v['vote'] === 'revision' ? 'Needs Improvement' : 'Declined') ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($v['comments'])): ?>
+                                    <p style="margin-top:8px; font-size:14px; color:#444; white-space:pre-wrap;">
+                                        <strong>Comments:</strong> <?= nl2br(htmlspecialchars($v['comments'])) ?>
+                                    </p>
+                                <?php endif; ?>
+                                <span style="font-size:11px; color:#999; display:block; margin-top:6px;">
+                                    <?= date('M d, Y H:i', strtotime($v['submitted_at'] ?? $v['created_at'])) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+        <?php else: ?>
+            <!-- No evaluations yet -->
+            <div class="submission-group full" style="background:#f8fafc; border-top:1px solid #dfe5ec;">
+                <div class="submission-value" style="text-align:center; color:#999; padding:20px;">
+                    <i class="fas fa-hourglass-half" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                    No evaluator feedback yet.
+                </div>
             </div>
         <?php endif; ?>
 
@@ -190,41 +307,47 @@ $remarks = $form_data['admin_remarks'] ?? '';
 </div>
 
 <style>
-/* Reuse submission-grid styles from the form */
-.submission-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-.submission-group {
-    padding: 16px 22px;
-    border-right: 1px solid #dfe5ec;
-    border-bottom: 1px solid #dfe5ec;
-}
-.submission-group:nth-child(2n) {
-    border-right: none;
-}
-.submission-group.full {
-    grid-column: 1 / span 2;
-    border-right: none;
-}
-.submission-label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #4b5563;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.submission-value {
-    font-size: 15px;
-    color: #111827;
-    padding: 6px 0;
-    min-height: 38px;
-    border-bottom: 1px dashed #e5e7eb;
-}
-/* Adjust table styles */
-.submission-value table {
-    font-size: 14px;
-}
+    /* Reuse submission-grid styles from the form */
+    .submission-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .submission-group {
+        padding: 16px 22px;
+        border-right: 1px solid #dfe5ec;
+        border-bottom: 1px solid #dfe5ec;
+    }
+
+    .submission-group:nth-child(2n) {
+        border-right: none;
+    }
+
+    .submission-group.full {
+        grid-column: 1 / span 2;
+        border-right: none;
+    }
+
+    .submission-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .submission-value {
+        font-size: 15px;
+        color: #111827;
+        padding: 6px 0;
+        min-height: 38px;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+
+    /* Adjust table styles */
+    .submission-value table {
+        font-size: 14px;
+    }
 </style>

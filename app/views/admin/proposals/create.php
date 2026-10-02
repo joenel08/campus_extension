@@ -71,46 +71,6 @@
         resize: none;
     }
 
-    .status-box {
-        margin-top: 30px;
-        padding: 22px;
-        background: #f8fafc;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .status-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 18px;
-        color: #183153;
-    }
-
-    .status-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 15px;
-    }
-
-    .status-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 18px;
-    }
-
-    .status-card h4 {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 10px;
-    }
-
-    .status-card p {
-        font-size: 18px;
-        font-weight: 700;
-        color: #111827;
-    }
-
     .proposal-buttons {
         display: flex;
         justify-content: flex-end;
@@ -153,75 +113,54 @@
     <div class="proposal-header">
         <div>
             <div class="proposal-title"><i class="fas fa-plus-circle"></i> New Call for Proposals</div>
-            <div class="proposal-subtitle">Setup a new proposal announcement and submission deadline</div>
+            <div class="proposal-subtitle">
+                This call will be opened immediately and visible to all extensionists.
+            </div>
         </div>
     </div>
 
     <form method="POST" action="/admin/proposal/store" enctype="multipart/form-data">
         <div class="proposal-grid">
-             <!-- ACADEMIC YEAR -->
+
+            <!-- ACADEMIC YEAR (display only) -->
             <div class="proposal-group">
                 <label class="proposal-label">Academic Year</label>
                 <input type="text" class="proposal-input"
                     value="<?= htmlspecialchars($currentAcademicYear['year_label'] ?? 'No Academic Year Set') ?>"
                     readonly style="background:#f0f0f0; font-weight:600; color:#2563eb;">
-                <p style="font-size:13px; color:#6c757d; margin-top:5px;">
-                    Auto-filled from the current academic year. To change it, go to
-                    <a href="/admin/academic-years" style="color:#2563eb; font-weight:600;">Academic Years</a>.
-                </p>
             </div>
-            <div class="proposal-group">
-                <label class="proposal-label">College</label>
-                <select name="college_id" class="proposal-select" required>
-                    <option value="">Select College</option>
-                    <?php foreach ($colleges as $college): ?>
-                        <option value="<?= $college['id'] ?>"><?= htmlspecialchars($college['abbreviation']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-           
+
+            <!-- TITLE -->
             <div class="proposal-group">
                 <label class="proposal-label">Proposal Title</label>
-                <input type="text" name="title" class="proposal-input" placeholder="Enter proposal title" required>
+                <input type="text" name="title" class="proposal-input" 
+                       placeholder="Enter proposal title" required>
             </div>
 
-
-            <div class="proposal-group">
-                <label class="proposal-label">Proposal Category</label>
-                <select name="category" class="proposal-select">
-                    <option value="internally_funded">Internally Funded</option>
-                    <option value="externally_funded">Externally Funded</option>
-                </select>
+            <!-- DEADLINE -->
+            <div class="proposal-group full">
+                <label class="proposal-label">Submission Deadline</label>
+                <input type="date" name="closing_date" class="proposal-input" 
+                       min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required>
+                <p style="font-size:12px; color:#6c757d; margin-top:5px;">
+                    Must be after today. The call will open immediately and close on this date.
+                </p>
             </div>
 
-            <div class="proposal-group">
-                <label class="proposal-label">Status</label>
-                <select name="status" class="proposal-select">
-                    <option value="open">Open</option>
-                    <option value="closed">Closed</option>
-                </select>
-            </div>
-            <div class="proposal-group">
+            <!-- FILE -->
+            <div class="proposal-group full">
                 <label class="proposal-label">Upload Proposal Guidelines</label>
                 <input type="file" name="file_path" class="proposal-input">
-                <p style="font-size:13px; color:#6c757d; margin-top:5px;">Upload PDF, DOC, or DOCX files.</p>
+                <p style="font-size:13px; color:#6c757d; margin-top:5px;">
+                    Upload PDF, DOC, or DOCX files.
+                </p>
             </div>
 
-            <div class="proposal-group">
-                <label class="proposal-label">Opening Date</label>
-                <input type="date" name="opening_date" class="proposal-input" required>
-            </div>
-
-            <div class="proposal-group">
-                <label class="proposal-label">Submission Deadline</label>
-                <input type="date" name="closing_date" class="proposal-input" required>
-            </div>
-
-            
-
+            <!-- DESCRIPTION -->
             <div class="proposal-group full">
                 <label class="proposal-label">Proposal Description</label>
-                <textarea name="description" class="proposal-textarea" placeholder="Enter proposal announcement details..."></textarea>
+                <textarea name="description" class="proposal-textarea" 
+                          placeholder="Enter proposal announcement details..."></textarea>
             </div>
         </div>
 

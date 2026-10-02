@@ -156,48 +156,7 @@ $budget = $form_data['budget_breakdown'] ?? [];
         <input type="number" name="budget" class="submission-input" value="<?= htmlspecialchars($basic['budget'] ?? '') ?>" step="0.01">
     </div>
 
-    <!-- BUDGET BREAKDOWN -->
-    <div class="submission-group full" style="background:#f8fafc; font-weight:700; font-size:16px; padding:15px 22px;">
-        <i class="fas fa-table"></i> 8. Budget Requirement / Budget
-    </div>
-
-    <div class="submission-group full" style="padding:0; border:none;">
-        <table style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr style="background:#f8fafc;">
-                    <th style="padding:12px; border:1px solid #dfe5ec;">Fund Year</th>
-                    <th style="padding:12px; border:1px solid #dfe5ec;">PS</th>
-                    <th style="padding:12px; border:1px solid #dfe5ec;">MOOE</th>
-                    <th style="padding:12px; border:1px solid #dfe5ec;">CO</th>
-                    <th style="padding:12px; border:1px solid #dfe5ec;">TOTAL</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 1</td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_ps" class="submission-input" style="width:100%;" value="<?= $budget['year1_ps'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year1_mooe'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_co" class="submission-input" style="width:100%;" value="<?= $budget['year1_co'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
-                </tr>
-                <tr>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 2</td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_ps" class="submission-input" style="width:100%;" value="<?= $budget['year2_ps'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year2_mooe'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_co" class="submission-input" style="width:100%;" value="<?= $budget['year2_co'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
-                </tr>
-                <tr>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 3</td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_ps" class="submission-input" style="width:100%;" value="<?= $budget['year3_ps'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year3_mooe'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_co" class="submission-input" style="width:100%;" value="<?= $budget['year3_co'] ?? 0 ?>" step="0.01"></td>
-                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
+   
     <!-- FILE ATTACHMENT -->
     <!-- FILE ATTACHMENT -->
 <div class="submission-group full">

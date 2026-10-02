@@ -23,6 +23,7 @@ $budget = $form_data['budget_breakdown'] ?? [];
                     ) ?>" readonly style="background:#f0f0f0;">
         <p style="font-size:12px; color:#6c757d; margin-top:5px;">Auto-filled from your account (read-only).</p>
     </div>
+
     <!-- COMPONENTS (Dynamic) -->
     <div class="submission-group full" style="background:#f8fafc; font-weight:700; font-size:16px; padding:15px 22px; border-top:1px solid #dfe5ec;">
         <i class="fas fa-layer-group"></i> Project Components
@@ -59,7 +60,6 @@ $budget = $form_data['budget_breakdown'] ?? [];
                             </tr>
                         <?php endforeach;
                     else: ?>
-                        <!-- Empty row placeholder -->
                         <tr class="component-row">
                             <td style="padding:8px; border:1px solid #dfe5ec;">
                                 <input type="text" name="component_title[]" class="submission-input" style="width:100%; height:40px;">
@@ -77,12 +77,13 @@ $budget = $form_data['budget_breakdown'] ?? [];
                 </tbody>
             </table>
         </div>
-        <div style="">
-            <button type="button" onclick="addComponentRow()" style="margin-left:10px;padding:10px 20px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+        <div>
+            <button type="button" onclick="addComponentRow()" style="margin-left:10px; padding:10px 20px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer;">
                 <i class="fas fa-plus"></i> Add Component
             </button>
         </div>
     </div>
+
     <div class="submission-group full">
         <label class="submission-label">3. Implementing Campus <span style="color:red;">*</span></label>
         <input type="text" name="implementing_campus" class="submission-input" value="<?= htmlspecialchars($basic['implementing_campus'] ?? 'ISU') ?>" required>
@@ -155,49 +156,110 @@ $budget = $form_data['budget_breakdown'] ?? [];
         <input type="number" name="budget" class="submission-input" value="<?= htmlspecialchars($basic['budget'] ?? '') ?>" step="0.01">
     </div>
 
-  
+    <!-- BUDGET BREAKDOWN -->
+    <div class="submission-group full" style="background:#f8fafc; font-weight:700; font-size:16px; padding:15px 22px;">
+        <i class="fas fa-table"></i> 8. Budget Requirement / Budget
+    </div>
+
+    <div class="submission-group full" style="padding:0; border:none;">
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f8fafc;">
+                    <th style="padding:12px; border:1px solid #dfe5ec;">Fund Year</th>
+                    <th style="padding:12px; border:1px solid #dfe5ec;">PS</th>
+                    <th style="padding:12px; border:1px solid #dfe5ec;">MOOE</th>
+                    <th style="padding:12px; border:1px solid #dfe5ec;">CO</th>
+                    <th style="padding:12px; border:1px solid #dfe5ec;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 1</td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_ps" class="submission-input" style="width:100%;" value="<?= $budget['year1_ps'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year1_mooe'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year1_co" class="submission-input" style="width:100%;" value="<?= $budget['year1_co'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 2</td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_ps" class="submission-input" style="width:100%;" value="<?= $budget['year2_ps'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year2_mooe'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year2_co" class="submission-input" style="width:100%;" value="<?= $budget['year2_co'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600;">Year 3</td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_ps" class="submission-input" style="width:100%;" value="<?= $budget['year3_ps'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_mooe" class="submission-input" style="width:100%;" value="<?= $budget['year3_mooe'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec;"><input type="number" name="year3_co" class="submission-input" style="width:100%;" value="<?= $budget['year3_co'] ?? 0 ?>" step="0.01"></td>
+                    <td style="padding:12px; border:1px solid #dfe5ec; font-weight:600; text-align:center;">Auto</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FILE ATTACHMENT -->
     <!-- FILE ATTACHMENT -->
 <div class="submission-group full">
     <label class="submission-label"><i class="fas fa-paperclip"></i> Attach File</label>
+
+    <!-- Download Template -->
+    <div style="margin-bottom:12px; padding:12px; background:#e8f0fe; border-radius:6px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-file-word" style="font-size:20px; color:#2563eb;"></i>
+            <div>
+                <strong>Proposal Template</strong>
+                <p style="font-size:12px; color:#6c757d; margin:2px 0 0 0;">Download and fill out the official proposal format.</p>
+            </div>
+        </div>
+        <a href="/templates/proposal_template.docx" download class="btn btn-sm btn-primary" style="text-decoration:none; padding:8px 16px; background:#2563eb; color:#fff; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-download"></i> Download Template
+        </a>
+    </div>
+
+    <!-- Existing file display (if any) -->
     <?php if (!empty($form_data['attachment'])): ?>
-        <div style="margin-bottom:10px; padding:12px; background:#e8f0fe; border-radius:6px; display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-file-alt" style="font-size:20px; color:#2563eb;"></i>
+        <div style="margin-bottom:10px; padding:12px; background:#e6f7ea; border-radius:6px; display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-file-alt" style="font-size:20px; color:#16a34a;"></i>
             <div style="flex:1;">
                 <strong>Current File:</strong>
                 <a href="/<?= htmlspecialchars($form_data['attachment']) ?>" target="_blank" style="color:#2563eb; margin-left:5px;">
                     <?= basename($form_data['attachment']) ?>
                 </a>
             </div>
-            <a href="/<?= htmlspecialchars($form_data['attachment']) ?>" download class="btn btn-sm btn-primary">
-                <i class="fas fa-download"></i> Download
+            <a href="/<?= htmlspecialchars($form_data['attachment']) ?>" download class="btn btn-sm btn-primary" style="padding:6px 12px; background:#16a34a; color:#fff; border-radius:6px; text-decoration:none;">
+                <i class="fas fa-download"></i>
             </a>
         </div>
         <p style="font-size:12px; color:#6c757d; margin-bottom:5px;">Upload a new file to replace the current one:</p>
     <?php endif; ?>
+
     <input type="file" name="attachment" class="submission-input file-upload">
     <p style="font-size:12px; color:#6c757d; margin-top:5px;">
         <?= !empty($form_data['attachment']) ? 'Leave empty to keep the current file.' : 'Upload supporting documents (PDF, DOC, DOCX, max 10MB)' ?>
     </p>
 </div>
+
 </div>
+
 <script>
     function addComponentRow() {
         const tbody = document.getElementById('componentsBody');
         const newRow = document.createElement('tr');
         newRow.className = 'component-row';
         newRow.innerHTML = `
-        <td style="padding:8px; border:1px solid #dfe5ec;">
-            <input type="text" name="component_title[]" class="submission-input" style="width:100%; height:40px;">
-        </td>
-        <td style="padding:8px; border:1px solid #dfe5ec;">
-            <input type="text" name="component_leader[]" class="submission-input" style="width:100%; height:40px;">
-        </td>
-        <td style="padding:8px; border:1px solid #dfe5ec; text-align:center;">
-            <button type="button" class="remove-component-btn" onclick="removeComponentRow(this)" style="background:#dc3545; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
+            <td style="padding:8px; border:1px solid #dfe5ec;">
+                <input type="text" name="component_title[]" class="submission-input" style="width:100%; height:40px;">
+            </td>
+            <td style="padding:8px; border:1px solid #dfe5ec;">
+                <input type="text" name="component_leader[]" class="submission-input" style="width:100%; height:40px;">
+            </td>
+            <td style="padding:8px; border:1px solid #dfe5ec; text-align:center;">
+                <button type="button" class="remove-component-btn" onclick="removeComponentRow(this)" style="background:#dc3545; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
         tbody.appendChild(newRow);
     }
 

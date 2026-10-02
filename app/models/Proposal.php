@@ -9,17 +9,41 @@ class Proposal
     }
 
     // Get all proposals with college info
+    // public function getAll($academic_year_id = null)
+    // {
+    //     $sql = "
+    //         SELECT p.*, 
+    //                c.abbreviation as college_abbr,
+    //                ay.year_label as academic_year_label
+    //         FROM proposals p
+    //         LEFT JOIN colleges c ON p.college_id = c.id
+    //         LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
+    //         WHERE 1=1
+    //     ";
+    //     $params = [];
+
+    //     if ($academic_year_id) {
+    //         $sql .= " AND p.academic_year_id = ?";
+    //         $params[] = $academic_year_id;
+    //     }
+
+    //     $sql .= " ORDER BY p.created_at DESC";
+
+    //     $stmt = $this->db->prepare($sql);
+    //     $stmt->execute($params);
+    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // }
+
+
     public function getAll($academic_year_id = null)
     {
         $sql = "
-            SELECT p.*, 
-                   c.abbreviation as college_abbr,
-                   ay.year_label as academic_year_label
-            FROM proposals p
-            LEFT JOIN colleges c ON p.college_id = c.id
-            LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
-            WHERE 1=1
-        ";
+        SELECT p.*, 
+               ay.year_label as academic_year_label
+        FROM proposals p
+        LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
+        WHERE 1=1
+    ";
         $params = [];
 
         if ($academic_year_id) {
@@ -37,62 +61,159 @@ class Proposal
     public function find($id)
     {
         $stmt = $this->db->prepare("
-            SELECT p.*, 
-                   c.abbreviation as college_abbr,
-                   ay.year_label as academic_year_label
-            FROM proposals p
-            LEFT JOIN colleges c ON p.college_id = c.id
-            LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
-            WHERE p.id = ?
-        ");
+        SELECT p.*, ay.year_label as academic_year_label
+        FROM proposals p
+        LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
+        WHERE p.id = ?
+    ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-   public function create($title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
+    public function create($title, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO proposals 
-            (title, college_id, category, status, opening_date, closing_date, description, file_path, academic_year_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
+        INSERT INTO proposals 
+        (title, status, opening_date, closing_date, description, file_path, academic_year_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
         return $stmt->execute([
-            $title, $college_id, $category, $status,
-            $opening_date, $closing_date, $description,
-            $file_path, $academic_year_id
+            $title,
+            $status,
+            $opening_date,
+            $closing_date,
+            $description,
+            $file_path,
+            $academic_year_id
         ]);
     }
 
-     public function update($id, $title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
+    public function update($id, $title, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
     {
         if ($file_path) {
             $stmt = $this->db->prepare("
-                UPDATE proposals
-                SET title = ?, college_id = ?, category = ?, status = ?, 
-                    opening_date = ?, closing_date = ?, description = ?, 
-                    file_path = ?, academic_year_id = ?
-                WHERE id = ?
-            ");
+            UPDATE proposals
+            SET title = ?, status = ?, opening_date = ?, closing_date = ?, 
+                description = ?, file_path = ?, academic_year_id = ?
+            WHERE id = ?
+        ");
             return $stmt->execute([
-                $title, $college_id, $category, $status,
-                $opening_date, $closing_date, $description,
-                $file_path, $academic_year_id, $id
+                $title,
+                $status,
+                $opening_date,
+                $closing_date,
+                $description,
+                $file_path,
+                $academic_year_id,
+                $id
             ]);
         } else {
             $stmt = $this->db->prepare("
-                UPDATE proposals
-                SET title = ?, college_id = ?, category = ?, status = ?, 
-                    opening_date = ?, closing_date = ?, description = ?, 
-                    academic_year_id = ?
-                WHERE id = ?
-            ");
+            UPDATE proposals
+            SET title = ?, status = ?, opening_date = ?, closing_date = ?, 
+                description = ?, academic_year_id = ?
+            WHERE id = ?
+        ");
             return $stmt->execute([
-                $title, $college_id, $category, $status,
-                $opening_date, $closing_date, $description,
-                $academic_year_id, $id
+                $title,
+                $status,
+                $opening_date,
+                $closing_date,
+                $description,
+                $academic_year_id,
+                $id
             ]);
         }
     }
+
+    public function getOpenByCollege($college_id, $academic_year_id = null)
+    {
+        // Now open for ALL colleges — college_id is ignored
+        $sql = "SELECT * FROM proposals WHERE status = 'open'";
+        $params = [];
+
+        if ($academic_year_id) {
+            $sql .= " AND academic_year_id = ?";
+            $params[] = $academic_year_id;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    // public function find($id)
+    // {
+    //     $stmt = $this->db->prepare("
+    //         SELECT p.*, 
+    //                c.abbreviation as college_abbr,
+    //                ay.year_label as academic_year_label
+    //         FROM proposals p
+    //         LEFT JOIN colleges c ON p.college_id = c.id
+    //         LEFT JOIN academic_years ay ON p.academic_year_id = ay.id
+    //         WHERE p.id = ?
+    //     ");
+    //     $stmt->execute([$id]);
+    //     return $stmt->fetch(PDO::FETCH_ASSOC);
+    // }
+
+    //    public function create($title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
+    //     {
+    //         $stmt = $this->db->prepare("
+    //             INSERT INTO proposals 
+    //             (title, college_id, category, status, opening_date, closing_date, description, file_path, academic_year_id)
+    //             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    //         ");
+    //         return $stmt->execute([
+    //             $title, $college_id, $category, $status,
+    //             $opening_date, $closing_date, $description,
+    //             $file_path, $academic_year_id
+    //         ]);
+    //     }
+
+    // public function update($id, $title, $college_id, $category, $status, $opening_date, $closing_date, $description, $file_path = null, $academic_year_id = null)
+    // {
+    //     if ($file_path) {
+    //         $stmt = $this->db->prepare("
+    //             UPDATE proposals
+    //             SET title = ?, college_id = ?, category = ?, status = ?, 
+    //                 opening_date = ?, closing_date = ?, description = ?, 
+    //                 file_path = ?, academic_year_id = ?
+    //             WHERE id = ?
+    //         ");
+    //         return $stmt->execute([
+    //             $title,
+    //             $college_id,
+    //             $category,
+    //             $status,
+    //             $opening_date,
+    //             $closing_date,
+    //             $description,
+    //             $file_path,
+    //             $academic_year_id,
+    //             $id
+    //         ]);
+    //     } else {
+    //         $stmt = $this->db->prepare("
+    //             UPDATE proposals
+    //             SET title = ?, college_id = ?, category = ?, status = ?, 
+    //                 opening_date = ?, closing_date = ?, description = ?, 
+    //                 academic_year_id = ?
+    //             WHERE id = ?
+    //         ");
+    //         return $stmt->execute([
+    //             $title,
+    //             $college_id,
+    //             $category,
+    //             $status,
+    //             $opening_date,
+    //             $closing_date,
+    //             $description,
+    //             $academic_year_id,
+    //             $id
+    //         ]);
+    //     }
+    // }
 
     public function delete($id)
     {
@@ -107,16 +228,16 @@ class Proposal
     }
 
 
-    public function getOpenByCollege($college_id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT * FROM proposals
-        WHERE status = 'open' AND college_id = ?
-        ORDER BY created_at DESC
-    ");
-        $stmt->execute([$college_id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    // public function getOpenByCollege($college_id)
+    // {
+    //     $stmt = $this->db->prepare("
+    //     SELECT * FROM proposals
+    //     WHERE status = 'open' AND college_id = ?
+    //     ORDER BY created_at DESC
+    // ");
+    //     $stmt->execute([$college_id]);
+    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // }
 
     public function getEvaluators($submission_id)
     {

@@ -23,7 +23,7 @@
       <div>
         <div class="hero-badge">Admin Panel</div>
         <h1 class="hero-name"><?= htmlspecialchars($currentUser['name'] ?? 'Admin') ?></h1>
-        <p class="hero-role">Research & Extension Director</p>
+        <p class="hero-role">Community Engagement Director</p>
       </div>
     </div>
   </div>
@@ -36,7 +36,7 @@
      onmouseout="this.style.background='rgba(255,255,255,0.12)'">
     <i class="fas fa-location-dot"></i> ISU Cabagan Campus
 </div>
-    <div class="hero-date"><i class="fas fa-calendar"></i>  <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
+    <div class="hero-date"><i class="fas fa-calendar"></i>Academic Year:  <?= htmlspecialchars($_SESSION['academic_year_label'] ?? 'Academic Year') ?></div>
     <div>
       <button onclick="openProfileModal()" style="padding:10px 18px; border:none; border-radius:8px; background:#fff; color:#183153; font-weight:600; cursor:pointer;">
         <i class="fas fa-user-edit"></i> Edit Profile
@@ -53,7 +53,7 @@
     onclick="window.location.href='/admin/monitoring'">
     <div class="modern-icon"><i class="fas fa-folder-open"></i></div>
     <div class="modern-number"><?= $total ?? 0 ?></div>
-    <div class="modern-title">Total Submissions</div>
+    <div class="modern-title">Total Projects</div>
     <div class="modern-progress">
       <div class="progress-bar progress-green"></div>
     </div>
@@ -64,7 +64,7 @@
     onclick="window.location.href='/admin/monitoring?status=ongoing'">
     <div class="modern-icon"><i class="fas fa-spinner"></i></div>
     <div class="modern-number"><?= $ongoing ?? 0 ?></div>
-    <div class="modern-title">On-Going</div>
+    <div class="modern-title">Under Revisions</div>
     <div class="modern-progress">
       <div class="progress-bar progress-blue"></div>
     </div>
@@ -75,7 +75,7 @@
     onclick="window.location.href='/admin/monitoring?status=completed'">
     <div class="modern-icon"><i class="fas fa-circle-check"></i></div>
     <div class="modern-number"><?= $completed ?? 0 ?></div>
-    <div class="modern-title">Completed Papers</div>
+    <div class="modern-title">Completed</div>
     <div class="modern-progress">
       <div class="progress-bar progress-orange"></div>
     </div>
