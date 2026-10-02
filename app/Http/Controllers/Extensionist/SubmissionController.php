@@ -400,27 +400,26 @@ class SubmissionController extends \ExtensionistBaseController
                 );
             }
         } elseif ($report_type === 'terminal') {
-            if (!$submission_id) {
-                $_SESSION['error'] = 'Missing parent submission.';
-                header('Location: /extensionist/submissions');
-                exit;
-            }
-            if ($this->terminalReportModel->hasTerminalReport($submission_id)) {
-                $_SESSION['error'] = 'A terminal report already exists for this proposal.';
-                header('Location: /extensionist/submissions');
-                exit;
-            }
+    if (!$submission_id) {
+        $_SESSION['error'] = 'Missing parent submission.';
+        header('Location: /extensionist/submissions');
+        exit;
+    }
+    if ($this->terminalReportModel->hasTerminalReport($submission_id)) {
+        $_SESSION['error'] = 'A terminal report already exists for this proposal.';
+        header('Location: /extensionist/submissions');
+        exit;
+    }
 
-            // ⬇️ PASS $academic_year_id AS 4TH ARG
-            $this->terminalReportModel->create($submission_id, $user_id, [
-                'completion_date'  => $_POST['completion_date'] ?? '',
-                'overall_status'   => $_POST['overall_status'] ?? '',
-                'final_summary'    => $_POST['final_summary'] ?? '',
-                'lessons_learned'  => $_POST['lessons_learned'] ?? '',
-                'recommendations'  => $_POST['recommendations'] ?? '',
-                'attachment'       => $attachment,
-                'status'           => $status,
-            ], $academic_year_id);
+    $this->terminalReportModel->create($submission_id, $user_id, [
+        'completion_date'  => date('Y-m-d'),   // <-- always today
+        'overall_status'   => 'completed',      // <-- default (or remove if column allows NULL)
+        'final_summary'    => '',
+        'lessons_learned'  => '',
+        'recommendations'  => '',
+        'attachment'       => $attachment,
+        'status'           => $status,
+    ], $academic_year_id);
 
             if ($status === 'submitted') {
                 $adminIds = $this->notificationModel->getAdmins();
@@ -611,21 +610,14 @@ class SubmissionController extends \ExtensionistBaseController
 
             $data['components'] = $components;
         } elseif ($report_type === 'progress') {
-            $data['progress_info'] = [
-                'report_date'     => $post['report_date'] ?? '',
-                'accomplishments' => $post['accomplishments'] ?? '',
-                'issues'          => $post['issues'] ?? '',
-                'next_plan'       => $post['next_plan'] ?? '',
-            ];
-        } elseif ($report_type === 'terminal') {
-            $data['terminal_info'] = [
-                'completion_date'  => $post['completion_date'] ?? '',
-                'overall_status'   => $post['overall_status'] ?? '',
-                'final_summary'    => $post['final_summary'] ?? '',
-                'lessons_learned'  => $post['lessons_learned'] ?? '',
-                'recommendations'  => $post['recommendations'] ?? '',
-            ];
-        }
+    $data['progress_info'] = [
+        'report_date' => $post['report_date'] ?? '',
+    ];
+} elseif ($report_type === 'terminal') {
+    $data['terminal_info'] = [
+        'completion_date' => $post['completion_date'] ?? date('Y-m-d'),
+    ];
+}
 
         return $data;
     }

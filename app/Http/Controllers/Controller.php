@@ -4,7 +4,10 @@ class Controller
     public function __construct()
     {
         // Check admin session for all admin controllers
-        if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+        if (
+            !isset($_SESSION['user_id'])
+            || !in_array($_SESSION['user_role'], ['admin', 'staff'])
+        ) {
             header('Location: /login');
             exit;
         }

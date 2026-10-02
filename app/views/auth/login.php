@@ -12,6 +12,23 @@ $colleges = $colleges ?? [];
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="/css/login_app.css">
     <link rel="icon" type="image/x-icon" href="/images/isu_logo.png">
+
+    <style>
+        .input-group select {
+            width: 100%;
+            padding: 18px;
+            border: 1px solid #ccc;
+            border-radius: 0px;
+            font-size: 17px;
+            outline: none;
+            background: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'><path fill='%23555' d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -48,11 +65,21 @@ $colleges = $colleges ?? [];
 
                 <form action="/login" method="POST">
                     <div class="input-group">
+                        <select name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="admin">Admin / Director</option>
+                            <option value="staff">Staff</option>
+                            <option value="extensionist">Extensionist</option>
+                            <option value="evaluator">Evaluator</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
                         <input type="email" name="email" placeholder="Email address" required>
                     </div>
                     <div class="input-group">
                         <input type="password" name="password" id="password" placeholder="Password" required>
                     </div>
+
                     <div class="show-pass">
                         <input type="checkbox" onclick="togglePassword()">
                         <label>Show Password</label>

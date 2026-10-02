@@ -31,12 +31,17 @@ require __DIR__ . '/../routes/web.php';
 // Load role routes if logged in
 if (isset($_SESSION['user_role'])) {
     $role = $_SESSION['user_role'];
+
+    // staff uses admin routes
+    if ($role === 'staff') {
+        $role = 'admin';
+    }
+
     $roleFile = __DIR__ . '/../routes/' . $role . '.php';
     if (file_exists($roleFile)) {
         require $roleFile;
     }
 }
-
 // Handle heartbeat BEFORE route matching
 if (
     $_SERVER['REQUEST_METHOD'] === 'POST'
@@ -176,6 +181,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($url === '/admin/templates/toggle') {
         $controller = new \Admin\TemplateController();
+        $controller->toggleStatus();
+        exit;
+    }
+
+
+    if ($url === '/admin/accounts/toggle') {
+        $controller = new \Admin\AccountsController();
         $controller->toggleStatus();
         exit;
     }

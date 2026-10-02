@@ -26,21 +26,44 @@ class AccountsController extends \Controller
         $this->render('accounts', ['users' => $users, 'colleges' => $colleges]);
     }
 
+    // public function store()
+    // {
+    //     $name = trim($_POST['name'] ?? '');
+    //     $email = trim($_POST['email'] ?? '');
+    //     $password = $_POST['password'] ?? '';
+    //     $role = $_POST['role'] ?? 'extensionist';
+    //     $college_id = ($role !== 'admin') ? ($_POST['college_id'] ?? null) : null;
+    //     // Admin-created accounts are automatically approved
+    //     $status = 'approved';
+
+    //     if ($name && $email && $password) {
+    //         if ($this->userModel->create($name, $email, $password, $role, $college_id, $status)) {
+    //             $_SESSION['success'] = 'Account created successfully.';
+    //         } else {
+    //             $_SESSION['error'] = 'Failed to create account. Email may already exist.';
+    //         }
+    //     } else {
+    //         $_SESSION['error'] = 'All fields are required.';
+    //     }
+    //     header('Location: /admin/accounts');
+    //     exit;
+    // }
     public function store()
     {
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $role = $_POST['role'] ?? 'extensionist';
-        $college_id = ($role !== 'admin') ? ($_POST['college_id'] ?? null) : null;
-        // Admin-created accounts are automatically approved
-        $status = 'approved';
+        $name       = trim($_POST['name'] ?? '');
+        $email      = trim($_POST['email'] ?? '');
+        $password   = $_POST['password'] ?? '';
+        $role       = $_POST['role'] ?? 'extensionist';
+        $college_id = ($role !== 'admin' && $role !== 'staff') ? ($_POST['college_id'] ?? null) : null;
+        $status     = 'approved';
+
+        // No more email uniqueness check — duplicates allowed for different roles
 
         if ($name && $email && $password) {
             if ($this->userModel->create($name, $email, $password, $role, $college_id, $status)) {
                 $_SESSION['success'] = 'Account created successfully.';
             } else {
-                $_SESSION['error'] = 'Failed to create account. Email may already exist.';
+                $_SESSION['error'] = 'Failed to create account.';
             }
         } else {
             $_SESSION['error'] = 'All fields are required.';
@@ -48,22 +71,22 @@ class AccountsController extends \Controller
         header('Location: /admin/accounts');
         exit;
     }
+
     public function update()
     {
         $id = $_POST['id'] ?? 0;
-        // Prevent admin from changing their own role to non-admin
-        if ($id == $_SESSION['user_id'] && $_POST['role'] !== 'admin') {
-            $_SESSION['error'] = 'You cannot change your own role to non-admin.';
+        if ($id == $_SESSION['user_id'] && $_POST['role'] !== $_SESSION['user_role']) {
+            $_SESSION['error'] = 'You cannot change your own role.';
             header('Location: /admin/accounts');
             exit;
         }
 
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $role = $_POST['role'] ?? 'extensionist';
-        $college_id = ($role !== 'admin') ? ($_POST['college_id'] ?? null) : null;
-        $status = $_POST['status'] ?? 'pending';
-        $password = $_POST['password'] ?? null;
+        $name       = trim($_POST['name'] ?? '');
+        $email      = trim($_POST['email'] ?? '');
+        $role       = $_POST['role'] ?? 'extensionist';
+        $college_id = ($role !== 'admin' && $role !== 'staff') ? ($_POST['college_id'] ?? null) : null;
+        $status     = $_POST['status'] ?? 'approved';
+        $password   = $_POST['password'] ?? null;
 
         if ($id && $name && $email) {
             if (!empty($password)) {
@@ -72,12 +95,40 @@ class AccountsController extends \Controller
                 $this->userModel->update($id, $name, $email, $role, $college_id, $status);
             }
             $_SESSION['success'] = 'Account updated successfully.';
-        } else {
-            $_SESSION['error'] = 'Invalid data.';
         }
         header('Location: /admin/accounts');
         exit;
     }
+    // public function update()
+    // {
+    //     $id = $_POST['id'] ?? 0;
+    //     // Prevent admin from changing their own role to non-admin
+    //     if ($id == $_SESSION['user_id'] && $_POST['role'] !== 'admin') {
+    //         $_SESSION['error'] = 'You cannot change your own role to non-admin.';
+    //         header('Location: /admin/accounts');
+    //         exit;
+    //     }
+
+    //     $name = trim($_POST['name'] ?? '');
+    //     $email = trim($_POST['email'] ?? '');
+    //     $role = $_POST['role'] ?? 'extensionist';
+    //     $college_id = ($role !== 'admin') ? ($_POST['college_id'] ?? null) : null;
+    //     $status = $_POST['status'] ?? 'pending';
+    //     $password = $_POST['password'] ?? null;
+
+    //     if ($id && $name && $email) {
+    //         if (!empty($password)) {
+    //             $this->userModel->update($id, $name, $email, $role, $college_id, $status, $password);
+    //         } else {
+    //             $this->userModel->update($id, $name, $email, $role, $college_id, $status);
+    //         }
+    //         $_SESSION['success'] = 'Account updated successfully.';
+    //     } else {
+    //         $_SESSION['error'] = 'Invalid data.';
+    //     }
+    //     header('Location: /admin/accounts');
+    //     exit;
+    // }
 
     public function approve()
     {
@@ -123,6 +174,31 @@ class AccountsController extends \Controller
         } else {
             $_SESSION['error'] = 'Invalid ID.';
         }
+        header('Location: /admin/accounts');
+        exit;
+    }
+
+    public function toggleStatus()
+    {
+        $id     = $_POST['id'] ?? 0;
+        $status = $_POST['status'] ?? 'approved';
+
+        // Prevent admin from deactivating their own account
+        if ($id == $_SESSION['user_id']) {
+            $_SESSION['error'] = 'You cannot deactivate your own account.';
+            header('Location: /admin/accounts');
+            exit;
+        }
+
+        if ($id && in_array($status, ['approved', 'deactivated'])) {
+            $this->userModel->toggleStatus($id, $status);
+            $_SESSION['success'] = $status === 'approved'
+                ? 'Account activated successfully.'
+                : 'Account deactivated successfully.';
+        } else {
+            $_SESSION['error'] = 'Invalid action.';
+        }
+
         header('Location: /admin/accounts');
         exit;
     }

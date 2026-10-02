@@ -54,16 +54,17 @@
         <div class="stat-number"><?= $totalAssigned ?? 0 ?></div>
         <div class="stat-title">Total Assigned</div>
     </div>
+     <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
+        <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+        <div class="stat-number"><?= $pending ?? 0 ?></div>
+        <div class="stat-title">On-going</div>
+    </div>
     <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
         <div class="stat-number"><?= $evaluated ?? 0 ?></div>
-        <div class="stat-title">Evaluated</div>
+        <div class="stat-title">Completed</div>
     </div>
-    <div class="stat-card" onclick="window.location.href='/evaluator/evaluations'">
-        <div class="stat-icon"><i class="fas fa-spinner"></i></div>
-        <div class="stat-number"><?= $pending ?? 0 ?></div>
-        <div class="stat-title">Pending</div>
-    </div>
+   
 </div>
 
 <!-- CALL TO ACTION -->

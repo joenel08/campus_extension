@@ -109,4 +109,10 @@ class User
         if (empty($last_activity)) return false;
         return (time() - strtotime($last_activity)) <= $threshold_seconds;
     }
+
+    public function toggleStatus($id, $status)
+    {
+        $stmt = $this->db->prepare("UPDATE users SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $id]);
+    }
 }

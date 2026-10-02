@@ -44,25 +44,20 @@ $file_path = $submission['attachment'] ?? $submission['file_path'] ?? $form_data
     <?php endif; ?>
 
     <!-- ================= REPORT-SPECIFIC DETAILS ================= -->
-    <?php if ($report_type === 'progress'): ?>
-        <h3 style="color:#16a34a; border-top:2px solid #e5e7eb; padding-top:15px; margin-top:20px;">
-            <i class="fas fa-chart-line"></i> Progress Report
-        </h3>
-        <p><strong>Reporting Date:</strong> <?= htmlspecialchars($progress['report_date'] ?? $submission['report_date'] ?? 'N/A') ?></p>
-        <p><strong>Accomplishments:</strong> <?= nl2br(htmlspecialchars($progress['accomplishments'] ?? $submission['accomplishments'] ?? 'N/A')) ?></p>
-        <p><strong>Issues / Challenges:</strong> <?= nl2br(htmlspecialchars($progress['issues'] ?? $submission['issues'] ?? 'N/A')) ?></p>
-        <p><strong>Next Plan:</strong> <?= nl2br(htmlspecialchars($progress['next_plan'] ?? $submission['next_plan'] ?? 'N/A')) ?></p>
+   <?php if ($report_type === 'progress'): ?>
+    <h3 style="color:#16a34a; border-top:2px solid #e5e7eb; padding-top:15px; margin-top:20px;">
+        <i class="fas fa-chart-line"></i> Progress Report
+    </h3>
+    <p><strong>Reporting Date:</strong> <?= htmlspecialchars($progress['report_date'] ?? $submission['report_date'] ?? 'N/A') ?></p>
+    <!-- Removed: Accomplishments, Issues, Next Plan -->
 
-    <?php elseif ($report_type === 'terminal'): ?>
-        <h3 style="color:#16a34a; border-top:2px solid #e5e7eb; padding-top:15px; margin-top:20px;">
-            <i class="fas fa-check-circle"></i> Terminal Report
-        </h3>
-        <p><strong>Completion Date:</strong> <?= htmlspecialchars($terminal['completion_date'] ?? $submission['completion_date'] ?? 'N/A') ?></p>
-        <p><strong>Overall Status:</strong> <?= htmlspecialchars($terminal['overall_status'] ?? $submission['overall_status'] ?? 'N/A') ?></p>
-        <p><strong>Final Summary:</strong> <?= nl2br(htmlspecialchars($terminal['final_summary'] ?? $submission['final_summary'] ?? 'N/A')) ?></p>
-        <p><strong>Lessons Learned:</strong> <?= nl2br(htmlspecialchars($terminal['lessons_learned'] ?? $submission['lessons_learned'] ?? 'N/A')) ?></p>
-        <p><strong>Recommendations:</strong> <?= nl2br(htmlspecialchars($terminal['recommendations'] ?? $submission['recommendations'] ?? 'N/A')) ?></p>
-    <?php endif; ?>
+   <?php elseif ($report_type === 'terminal'): ?>
+    <h3 style="color:#16a34a; border-top:2px solid #e5e7eb; padding-top:15px; margin-top:20px;">
+        <i class="fas fa-check-circle"></i> Terminal Report
+    </h3>
+    <p><strong>Completion Date:</strong> <?= htmlspecialchars($terminal['completion_date'] ?? $submission['completion_date'] ?? 'N/A') ?></p>
+    <!-- Removed: Overall Status, Final Summary, Lessons Learned, Recommendations -->
+  <?php endif; ?>
 
     <!-- ================= ATTACHMENT ================= -->
     <?php

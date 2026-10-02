@@ -146,10 +146,10 @@
         <label>Status</label>
         <select name="status" class="form-input">
             <option value="">All</option>
-            <option value="draft" <?= ($filters['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option>
+            <!-- <option value="draft" <?= ($filters['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option> -->
             <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option>
             <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approved</option>
-            <option value="pending_evaluation" <?= ($filters['status'] ?? '') === 'pending_evaluation' ? 'selected' : '' ?>>Pending Evaluation</option>
+            <!-- <option value="pending_evaluation" <?= ($filters['status'] ?? '') === 'pending_evaluation' ? 'selected' : '' ?>>Pending Evaluation</option> -->
             <option value="under_evaluation" <?= ($filters['status'] ?? '') === 'under_evaluation' ? 'selected' : '' ?>>Under Evaluation</option>
             <option value="revision" <?= ($filters['status'] ?? '') === 'revision' ? 'selected' : '' ?>>Revision</option>
             <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Declined</option>
@@ -179,14 +179,14 @@
             <?php endforeach; ?>
         </select>
     </div>
-    <div>
+    <!-- <div>
         <label>Date From</label>
         <input type="date" name="date_from" class="form-input" value="<?= $filters['date_from'] ?? '' ?>">
     </div>
     <div>
         <label>Date To</label>
         <input type="date" name="date_to" class="form-input" value="<?= $filters['date_to'] ?? '' ?>">
-    </div>
+    </div> -->
     <div style="display:flex; align-items:flex-end; gap:10px;">
         <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
         <a href="/admin/monitoring" class="btn btn-secondary">Clear</a>

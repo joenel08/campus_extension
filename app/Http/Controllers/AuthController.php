@@ -34,58 +34,126 @@ class AuthController
         $activeSection = 'login';
         require __DIR__ . '/../../views/auth/login.php';
     }
+
     public function login()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /login');
-            exit;
-        }
-
-        $email = trim($_POST['email'] ?? '');
-        $password = trim($_POST['password'] ?? '');
-
-        try {
-            $user = $this->userModel->findByEmail($email);
-            if (!$user || !$this->userModel->verifyPassword($password, $user['password'])) {
-                $_SESSION['login_error'] = 'Invalid email or password.';
-                header('Location: /login');
-                exit;
-            }
-
-            // Load current academic year
-            $stmt = $this->db->query("SELECT * FROM academic_years WHERE is_current = TRUE LIMIT 1");
-            $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($currentYear) {
-                $_SESSION['academic_year_id'] = $currentYear['id'];
-                $_SESSION['academic_year_label'] = $currentYear['year_label'];
-            } else {
-                $_SESSION['academic_year_id'] = null;
-                $_SESSION['academic_year_label'] = 'No academic year set';
-            }
-            // Set session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['college_id'] = $user['college_id'];
-
-            // Fetch college abbreviation using the stored PDO connection
-            if ($user['college_id']) {
-                $stmt = $this->db->prepare("SELECT abbreviation FROM colleges WHERE id = ?");
-                $stmt->execute([$user['college_id']]);
-                $college = $stmt->fetch(PDO::FETCH_ASSOC);
-                $_SESSION['college_abbr'] = $college['abbreviation'] ?? '';
-            } else {
-                $_SESSION['college_abbr'] = '';
-            }
-
-            header("Location: /{$user['role']}/dashboard");
-            exit;
-        } catch (PDOException $e) {
-            $_SESSION['login_error'] = 'Database error. Please try again.';
-            header('Location: /login');
-            exit;
-        }
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: /login');
+        exit;
     }
+
+    $email    = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $role     = trim($_POST['role'] ?? '');
+
+    if (!$email || !$password || !$role) {
+        $_SESSION['login_error'] = 'Email, password, and role are required.';
+        header('Location: /login');
+        exit;
+    }
+
+    try {
+        // Find user by email AND role
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ? AND role = ? LIMIT 1");
+        $stmt->execute([$email, $role]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user || !$this->userModel->verifyPassword($password, $user['password'])) {
+            $_SESSION['login_error'] = 'Invalid email, password, or role.';
+            header('Location: /login');
+            exit;
+        }
+
+        // Set session
+        $_SESSION['user_id']      = $user['id'];
+        $_SESSION['user_name']    = $user['name'];
+        $_SESSION['user_role']    = $user['role'];
+        $_SESSION['user_email']   = $user['email'];
+        $_SESSION['college_id']   = $user['college_id'];
+
+        // Fetch college abbreviation
+        if ($user['college_id']) {
+            $stmt = $this->db->prepare("SELECT abbreviation FROM colleges WHERE id = ?");
+            $stmt->execute([$user['college_id']]);
+            $_SESSION['college_abbr'] = $stmt->fetchColumn() ?: '';
+        } else {
+            $_SESSION['college_abbr'] = '';
+        }
+
+        // Load current academic year
+        $stmt = $this->db->query("SELECT * FROM academic_years WHERE is_current = TRUE LIMIT 1");
+        $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+        $_SESSION['academic_year_id']    = $currentYear['id'] ?? null;
+        $_SESSION['academic_year_label'] = $currentYear['year_label'] ?? 'N/A';
+
+        // Redirect based on role
+        // staff redirects to admin dashboard
+        if ($user['role'] === 'staff' || $user['role'] === 'admin') {
+            header('Location: /admin/dashboard');
+        } elseif ($user['role'] === 'extensionist') {
+            header('Location: /extensionist/dashboard');
+        } elseif ($user['role'] === 'evaluator') {
+            header('Location: /evaluator/dashboard');
+        }
+        exit;
+    } catch (PDOException $e) {
+        $_SESSION['login_error'] = 'Database error. Please try again.';
+        header('Location: /login');
+        exit;
+    }
+}
+    // public function login()
+    // {
+    //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    //         header('Location: /login');
+    //         exit;
+    //     }
+
+    //     $email = trim($_POST['email'] ?? '');
+    //     $password = trim($_POST['password'] ?? '');
+
+    //     try {
+    //         $user = $this->userModel->findByEmail($email);
+    //         if (!$user || !$this->userModel->verifyPassword($password, $user['password'])) {
+    //             $_SESSION['login_error'] = 'Invalid email or password.';
+    //             header('Location: /login');
+    //             exit;
+    //         }
+
+    //         // Load current academic year
+    //         $stmt = $this->db->query("SELECT * FROM academic_years WHERE is_current = TRUE LIMIT 1");
+    //         $currentYear = $stmt->fetch(PDO::FETCH_ASSOC);
+    //         if ($currentYear) {
+    //             $_SESSION['academic_year_id'] = $currentYear['id'];
+    //             $_SESSION['academic_year_label'] = $currentYear['year_label'];
+    //         } else {
+    //             $_SESSION['academic_year_id'] = null;
+    //             $_SESSION['academic_year_label'] = 'No academic year set';
+    //         }
+    //         // Set session
+    //         $_SESSION['user_id'] = $user['id'];
+    //         $_SESSION['user_name'] = $user['name'];
+    //         $_SESSION['user_role'] = $user['role'];
+    //         $_SESSION['college_id'] = $user['college_id'];
+
+    //         // Fetch college abbreviation using the stored PDO connection
+    //         if ($user['college_id']) {
+    //             $stmt = $this->db->prepare("SELECT abbreviation FROM colleges WHERE id = ?");
+    //             $stmt->execute([$user['college_id']]);
+    //             $college = $stmt->fetch(PDO::FETCH_ASSOC);
+    //             $_SESSION['college_abbr'] = $college['abbreviation'] ?? '';
+    //         } else {
+    //             $_SESSION['college_abbr'] = '';
+    //         }
+
+    //         header("Location: /{$user['role']}/dashboard");
+    //         exit;
+    //     } catch (PDOException $e) {
+    //         $_SESSION['login_error'] = 'Database error. Please try again.';
+    //         header('Location: /login');
+    //         exit;
+    //     }
+    // }
 
     public function logout()
     {

@@ -213,19 +213,19 @@ $file_path = $submission['attachment'] ?? $submission['file_path'] ?? $form_data
             <?php if ($report_type === 'progress'): ?>
                 <h4 style="margin:20px 0 8px; color:#16a34a; border-top:1px solid #e5e7eb; padding-top:15px;">Progress Report Details</h4>
                 <p><strong>Report Date:</strong> <?= htmlspecialchars($submission['report_date'] ?? 'N/A') ?></p>
-                <p><strong>Accomplishments:</strong> <?= nl2br(htmlspecialchars($submission['accomplishments'] ?? 'N/A')) ?></p>
+                <!-- <p><strong>Accomplishments:</strong> <?= nl2br(htmlspecialchars($submission['accomplishments'] ?? 'N/A')) ?></p>
                 <p><strong>Issues:</strong> <?= nl2br(htmlspecialchars($submission['issues'] ?? 'N/A')) ?></p>
-                <p><strong>Next Plan:</strong> <?= nl2br(htmlspecialchars($submission['next_plan'] ?? 'N/A')) ?></p>
+                <p><strong>Next Plan:</strong> <?= nl2br(htmlspecialchars($submission['next_plan'] ?? 'N/A')) ?></p> -->
             <?php endif; ?>
 
             <!-- === TERMINAL REPORT DATA === -->
             <?php if ($report_type === 'terminal'): ?>
                 <h4 style="margin:20px 0 8px; color:#16a34a; border-top:1px solid #e5e7eb; padding-top:15px;">Terminal Report Details</h4>
                 <p><strong>Completion Date:</strong> <?= htmlspecialchars($submission['completion_date'] ?? 'N/A') ?></p>
-                <p><strong>Overall Status:</strong> <?= htmlspecialchars($submission['overall_status'] ?? 'N/A') ?></p>
+                <!-- <p><strong>Overall Status:</strong> <?= htmlspecialchars($submission['overall_status'] ?? 'N/A') ?></p>
                 <p><strong>Final Summary:</strong> <?= nl2br(htmlspecialchars($submission['final_summary'] ?? 'N/A')) ?></p>
                 <p><strong>Lessons Learned:</strong> <?= nl2br(htmlspecialchars($submission['lessons_learned'] ?? 'N/A')) ?></p>
-                <p><strong>Recommendations:</strong> <?= nl2br(htmlspecialchars($submission['recommendations'] ?? 'N/A')) ?></p>
+                <p><strong>Recommendations:</strong> <?= nl2br(htmlspecialchars($submission['recommendations'] ?? 'N/A')) ?></p> -->
             <?php endif; ?>
 
             <!-- === ATTACHMENT === -->

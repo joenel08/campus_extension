@@ -44,7 +44,7 @@
   <div class="stat-card" onclick="window.location.href='/extensionist/submissions'">
     <div class="stat-icon"><i class="fas fa-file"></i></div>
     <div class="stat-number"><?= $total ?? 0 ?></div>
-    <div class="stat-title">Submitted Papers</div>
+    <div class="stat-title">My Projects</div>
   </div>
   <div class="stat-card" onclick="window.location.href='/extensionist/submissions/filtered?filter=pending'">
     <div class="stat-icon"><i class="fas fa-spinner"></i></div>
