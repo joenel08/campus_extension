@@ -153,9 +153,9 @@ $file_path = $submission['attachment'] ?? $submission['file_path'] ?? $form_data
     <span class="badge <?= $submission['status'] === 'approved' ? 'badge-approved' : ($submission['status'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>" style="font-size:16px; padding:8px 16px;">
         <?= ucfirst($submission['status']) ?>
     </span>
-    <button class="btn btn-primary print-btn" onclick="window.print()" style="margin-left:10px;">
+    <!-- <button class="btn btn-primary print-btn" onclick="window.print()" style="margin-left:10px;">
         <i class="fas fa-print"></i> Print
-    </button>
+    </button> -->
     <a href="/admin/monitoring" class="btn btn-secondary" style="margin-left:10px;">
         <i class="fas fa-arrow-left"></i> Back
     </a>

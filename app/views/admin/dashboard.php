@@ -64,7 +64,7 @@
     onclick="window.location.href='/admin/monitoring?status=ongoing'">
     <div class="modern-icon"><i class="fas fa-spinner"></i></div>
     <div class="modern-number"><?= $ongoing ?? 0 ?></div>
-    <div class="modern-title">Under Revisions</div>
+    <div class="modern-title">On-going</div>
     <div class="modern-progress">
       <div class="progress-bar progress-blue"></div>
     </div>

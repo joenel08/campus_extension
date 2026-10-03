@@ -518,6 +518,297 @@ nav a:hover {
 
 }
 
+
+
+
+/* ============================================================
+   ORGANIZATIONAL CHART (v2)
+   ============================================================ */
+
+.org-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* ---- Node card ---- */
+.org-node {
+    background: #fff;
+    border: 2px solid #0b7a33;
+    border-radius: 14px;
+    padding: 16px 22px;
+    text-align: center;
+    min-width: 220px;
+    max-width: 260px;
+    box-shadow: 0 4px 14px rgba(11, 122, 51, 0.12);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.org-node:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(11, 122, 51, 0.22);
+}
+
+.org-node img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e6f7ef;
+    margin: 0 auto 10px;
+    display: block;
+}
+
+.org-node h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0a5d22;
+    margin: 0 0 4px;
+    line-height: 1.3;
+}
+
+.org-node p {
+    font-size: 13px;
+    color: #555;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.org-node .org-college {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 10px;
+    background: #e6f7ef;
+    color: #0b7a33;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ---- Single vertical line between two nodes ---- */
+.org-vline {
+    width: 2px;
+    height: 30px;
+    background: #0b7a33;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   SPLIT SECTION
+   ============================================================ */
+.org-split {
+    position: relative;
+    width: 100%;
+    max-width: 1000px;
+    padding-top: 40px;   /* space for horizontal + drops */
+    padding-bottom: 40px; /* space for line down to staffs */
+}
+
+/* Horizontal line at y=20px, from 25% to 75% (exact centers) */
+.org-split::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    background: #0b7a33;
+    z-index: 1;
+}
+
+/* Vertical from Director bottom (y=0) to horizontal line (y=20) */
+.org-split::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: #0b7a33;
+    z-index: 1;
+}
+
+/* Center line continuing down through the gap to the bottom */
+.org-center-line {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    bottom: 0;
+    background: #0b7a33;
+    z-index: 1;
+}
+
+/* Two-column grid (NO gap — padding inside each column creates the visual gap) */
+.org-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    z-index: 2;
+}
+
+/* Each column */
+.org-col {
+    position: relative;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Vertical drop from horizontal line (y=20) to column top (y=40) */
+.org-col::before {
+    content: '';
+    position: absolute;
+    top: -20px;   /* 20px above col top = 20px from split top */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: #0b7a33;
+    z-index: 1;
+}
+
+/* Column title */
+.org-col-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0b7a33;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #e6f7ef;
+    padding: 6px 18px;
+    border-radius: 999px;
+    margin-bottom: 15px;
+    display: inline-block;
+}
+
+/* Column node list */
+.org-col-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Coordinators use 2 sub-columns */
+.org-col-list.coordinator-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    justify-items: center;
+    width: 100%;
+}
+
+.org-col-list.coordinator-2col .org-node {
+    min-width: 0;
+    width: 100%;
+    max-width: 180px;
+    padding: 12px 14px;
+}
+
+.org-col-list.coordinator-2col .org-node img {
+    width: 60px;
+    height: 60px;
+}
+
+.org-col-list.coordinator-2col .org-node h3 {
+    font-size: 13px;
+}
+
+.org-col-list.coordinator-2col .org-node p {
+    font-size: 11px;
+}
+
+/* ============================================================
+   STAFF SECTION
+   ============================================================ */
+.org-staff-section {
+    width: 100%;
+    max-width: 1000px;
+    text-align: center;
+    position: relative;
+}
+
+/* Small vertical line above "Staffs" title (from bottom of split) */
+.org-staff-section::before {
+    content: '';
+    position: absolute;
+    top: -40px;   /* matches split's padding-bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 40px;
+    background: #0b7a33;
+    z-index: 1;
+}
+
+.org-staff-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0b7a33;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #e6f7ef;
+    padding: 8px 24px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+}
+
+.org-staff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Empty state */
+.org-empty {
+    text-align: center;
+    color: #777;
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .org-split {
+        padding-top: 30px;
+    }
+
+    .org-split::before,
+    .org-split::after,
+    .org-center-line,
+    .org-col::before,
+    .org-staff-section::before {
+        display: none;
+    }
+
+    .org-cols {
+        grid-template-columns: 1fr;
+    }
+
+    .org-col {
+        padding: 20px;
+    }
+
+    .org-col-list.coordinator-2col {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 /* ================= ORGANIZATIONAL STRUCTURE ================= */
 
 .org-section {

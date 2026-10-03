@@ -2,10 +2,12 @@
 namespace Admin;
 
 require_once __DIR__ . '/../../../models/Official.php';
+require_once __DIR__ . '/../../../models/College.php';
 
 class OfficialController extends \Controller
 {
     private $officialModel;
+    private $collegeModel;
     private $uploadDir = 'uploads/officials/';
 
     public function __construct()
@@ -15,17 +17,16 @@ class OfficialController extends \Controller
         $pdo = new \PDO("mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}", $config['username'], $config['password']);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->officialModel = new \Official($pdo);
+        $this->collegeModel = new \College($pdo);
 
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
     }
 
-    // List all officials grouped by category
     public function index()
     {
         $officials = $this->officialModel->getAll();
-        // Group by category for display
         $groups = [];
         foreach ($officials as $official) {
             $groups[$official['category']][] = $official;
@@ -33,38 +34,60 @@ class OfficialController extends \Controller
         $this->render('officials/index', ['groups' => $groups]);
     }
 
-    // Show create form
     public function create()
     {
-        $this->render('officials/create');
+        $colleges = $this->collegeModel->getAll();
+        $this->render('officials/create', ['colleges' => $colleges]);
     }
 
-    // Store new official
     public function store()
     {
-        $name = trim($_POST['name'] ?? '');
-        $position = trim($_POST['position'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $category = $_POST['category'] ?? 'administrative';
-        $status = $_POST['status'] ?? 'draft';
+        $name          = trim($_POST['name'] ?? '');
+        $position      = trim($_POST['position'] ?? '');
+        $category      = $_POST['category'] ?? 'staffs';
+        $college_id    = ($category === 'college_coordinator') ? ($_POST['college_id'] ?? null) : null;
+        $status        = $_POST['status'] ?? 'draft';
         $display_order = (int) ($_POST['display_order'] ?? 0);
-        $image = '';
+        $image         = '';
 
         if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $image = $this->uploadImage($_FILES['image']);
         }
 
-        if ($name && $position && $email) {
-            $this->officialModel->create($name, $position, $email, $category, $image, $status, $display_order);
-            $_SESSION['success'] = 'Official added successfully.';
-        } else {
-            $_SESSION['error'] = 'Name, position, and email are required.';
+        // Validation
+        if (!$name || !$position) {
+            $_SESSION['error'] = 'Name and position are required.';
+            header('Location: /admin/officials/create');
+            exit;
         }
+
+        // CEO uniqueness
+        if ($category === 'ceo' && $this->officialModel->countByCategory('ceo') > 0) {
+            $_SESSION['error'] = 'There is already a CEO. Only one is allowed.';
+            header('Location: /admin/officials/create');
+            exit;
+        }
+
+        // Director uniqueness
+        if ($category === 'director' && $this->officialModel->countByCategory('director') > 0) {
+            $_SESSION['error'] = 'There is already a Director. Only one is allowed.';
+            header('Location: /admin/officials/create');
+            exit;
+        }
+
+        // College Coordinator must have a college
+        if ($category === 'college_coordinator' && !$college_id) {
+            $_SESSION['error'] = 'College Coordinator must be assigned to a college.';
+            header('Location: /admin/officials/create');
+            exit;
+        }
+
+        $this->officialModel->create($name, $position, $category, $college_id, $image, $status, $display_order);
+        $_SESSION['success'] = 'Official added successfully.';
         header('Location: /admin/officials');
         exit;
     }
 
-    // Show edit form
     public function edit()
     {
         $id = $_GET['id'] ?? 0;
@@ -74,24 +97,49 @@ class OfficialController extends \Controller
             header('Location: /admin/officials');
             exit;
         }
-        $this->render('officials/edit', ['official' => $official]);
+        $colleges = $this->collegeModel->getAll();
+        $this->render('officials/edit', ['official' => $official, 'colleges' => $colleges]);
     }
 
-    // Update official
     public function update()
     {
-        $id = $_POST['id'] ?? 0;
-        $name = trim($_POST['name'] ?? '');
-        $position = trim($_POST['position'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $category = $_POST['category'] ?? 'administrative';
-        $status = $_POST['status'] ?? 'draft';
+        $id            = $_POST['id'] ?? 0;
+        $name          = trim($_POST['name'] ?? '');
+        $position      = trim($_POST['position'] ?? '');
+    
+        $category      = $_POST['category'] ?? 'staffs';
+        $college_id    = ($category === 'college_coordinator') ? ($_POST['college_id'] ?? null) : null;
+        $status        = $_POST['status'] ?? 'draft';
         $display_order = (int) ($_POST['display_order'] ?? 0);
 
         $official = $this->officialModel->find($id);
         if (!$official) {
             $_SESSION['error'] = 'Official not found.';
             header('Location: /admin/officials');
+            exit;
+        }
+
+        if (!$name || !$position) {
+            $_SESSION['error'] = 'Name and position are required.';
+            header('Location: /admin/officials/edit?id=' . $id);
+            exit;
+        }
+
+        if ($category === 'ceo' && $this->officialModel->countByCategory('ceo', $id) > 0) {
+            $_SESSION['error'] = 'There is already a CEO. Only one is allowed.';
+            header('Location: /admin/officials/edit?id=' . $id);
+            exit;
+        }
+
+        if ($category === 'director' && $this->officialModel->countByCategory('director', $id) > 0) {
+            $_SESSION['error'] = 'There is already a Director. Only one is allowed.';
+            header('Location: /admin/officials/edit?id=' . $id);
+            exit;
+        }
+
+        if ($category === 'college_coordinator' && !$college_id) {
+            $_SESSION['error'] = 'College Coordinator must be assigned to a college.';
+            header('Location: /admin/officials/edit?id=' . $id);
             exit;
         }
 
@@ -103,17 +151,12 @@ class OfficialController extends \Controller
             $image = $this->uploadImage($_FILES['image']);
         }
 
-        if ($name && $position && $email) {
-            $this->officialModel->update($id, $name, $position, $email, $category, $image, $status, $display_order);
-            $_SESSION['success'] = 'Official updated successfully.';
-        } else {
-            $_SESSION['error'] = 'Name, position, and email are required.';
-        }
+        $this->officialModel->update($id, $name, $position, $category, $college_id, $image, $status, $display_order);
+        $_SESSION['success'] = 'Official updated successfully.';
         header('Location: /admin/officials');
         exit;
     }
 
-    // Delete official
     public function delete()
     {
         $id = $_POST['id'] ?? 0;
@@ -131,7 +174,6 @@ class OfficialController extends \Controller
         exit;
     }
 
-    // Toggle status
     public function toggleStatus()
     {
         $id = $_POST['id'] ?? 0;

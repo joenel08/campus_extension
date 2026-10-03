@@ -1,23 +1,20 @@
-UPDATE progress_reports SET accomplishments = NULL, issues = NULL, next_plan = NULL;
+-- Drop the old table
+DROP TABLE IF EXISTS officials;
 
-
-ALTER TABLE terminal_reports 
-  MODIFY overall_status VARCHAR(50) NULL,
-  MODIFY final_summary TEXT NULL,
-  MODIFY lessons_learned TEXT NULL,
-  MODIFY recommendations TEXT NULL;
-
-
-  -- Add staff to the role enum
-ALTER TABLE users 
-    MODIFY role ENUM('admin', 'staff', 'extensionist', 'evaluator') NOT NULL;
-
--- Drop the UNIQUE constraint on email so the same email can have multiple roles
-ALTER TABLE users DROP INDEX email;
-
--- Add a regular index (for fast lookup by email + role)
-ALTER TABLE users ADD INDEX idx_email_role (email, role);
-
-ALTER TABLE users 
-    MODIFY status ENUM('pending', 'approved', 'declined', 'deactivated') 
-    DEFAULT 'pending';
+-- Create the new table with the updated structure
+CREATE TABLE officials (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    category ENUM('ceo', 'director', 'college_coordinator', 'heads', 'staffs') NOT NULL,
+    college_id INT NULL,
+    image VARCHAR(255) NULL,
+    status ENUM('draft', 'published') DEFAULT 'draft',
+    display_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_status (status),
+    CONSTRAINT fk_officials_college 
+        FOREIGN KEY (college_id) REFERENCES colleges(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

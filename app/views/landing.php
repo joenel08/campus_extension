@@ -34,8 +34,13 @@
     }
 
     @keyframes bookFadeIn {
-        from { opacity: 0; }
-        to   { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
     .book-slider-container {
@@ -51,8 +56,15 @@
     }
 
     @keyframes bookPop {
-        0%   { transform: scale(0.9); opacity: 0; }
-        100% { transform: scale(1);   opacity: 1; }
+        0% {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     .close-book {
@@ -165,14 +177,17 @@
         .book-slide {
             grid-template-columns: 1fr;
         }
+
         .book-page.left-page {
             max-height: 260px;
             border-right: none;
             border-bottom: 1px solid #e5e7eb;
         }
+
         .book-page.right-page {
             padding: 24px;
         }
+
         .book-content h2 {
             font-size: 20px;
         }
@@ -188,10 +203,10 @@
     <?php else: ?>
         <img src="<?= htmlspecialchars($banner_url) ?>" alt="Banner" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:-2;">
     <?php endif; ?>
-   <div class="hero-content">
-    <h1><?= htmlspecialchars($banner_title) ?></h1>
-    <p><?= htmlspecialchars($banner_subtitle) ?></p>
-</div>
+    <div class="hero-content">
+        <h1><?= htmlspecialchars($banner_title) ?></h1>
+        <p><?= htmlspecialchars($banner_subtitle) ?></p>
+    </div>
 </section>
 
 <!-- NEWS SECTION -->
@@ -294,33 +309,117 @@
 <section id="org" class="org-section">
     <div class="org-title">
         <h1>Organizational Structure</h1>
-        <p>Extension and Training Services Officials</p>
+        <p>Community Engagement Services</p>
     </div>
-    <div class="org-table">
-        <?php
-        $categoryLabels = [
-            'administrative'     => 'ADMINISTRATIVE OFFICIALS',
-            'research_extension' => 'RESEARCH & DEVELOPMENT, EXTENSION & TRAINING',
-            'deans'              => 'COLLEGE DEANS',
-        ];
-        foreach ($categoryLabels as $catKey => $catLabel):
-            if (!isset($officials[$catKey]) || empty($officials[$catKey])) continue;
-        ?>
-            <div class="college-header"><?= $catLabel ?></div>
-            <?php foreach ($officials[$catKey] as $official): ?>
-                <div class="official-card">
-                    <div class="official-image">
-                        <img src="<?= htmlspecialchars($official['image'] ? '/' . $official['image'] : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="%23e5e7eb" width="200" height="200"/><text x="50%" y="50%" font-family="sans-serif" font-size="14" fill="%239ca3af" text-anchor="middle" dy=".3em">No Photo</text></svg>') ?>">
-                    </div>
-                    <div class="official-info">
-                        <h2><?= htmlspecialchars($official['name']) ?></h2>
-                        <h3><?= htmlspecialchars($official['position']) ?></h3>
-                        <p>Email : <?= htmlspecialchars($official['email']) ?></p>
+
+    <?php
+    $ceoList         = $officials['ceo'] ?? [];
+    $directorList    = $officials['director'] ?? [];
+    $coordinatorList = $officials['college_coordinator'] ?? [];
+    $headsList       = $officials['heads'] ?? [];
+    $staffList       = $officials['staffs'] ?? [];
+
+    $noOfficials = empty($ceoList) && empty($directorList) && empty($coordinatorList)
+        && empty($headsList) && empty($staffList);
+
+    // Build the placeholder once (URL-encoded so it's safe inside src="...")
+    $placeholder = 'data:image/svg+xml;utf8,' . rawurlencode(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">'
+            . '<rect fill="#e5e7eb" width="200" height="200"/>'
+            . '<text x="50%" y="50%" font-family="sans-serif" font-size="14" '
+            . 'fill="#9ca3af" text-anchor="middle" dy=".3em">No Photo</text>'
+            . '</svg>'
+    );
+
+    $renderNode = function ($o) use ($placeholder) {
+        $img = !empty($o['image'])
+            ? '/' . htmlspecialchars($o['image'])
+            : $placeholder;
+    ?>
+        <div class="org-node">
+            <img src="<?= $img ?>" alt="<?= htmlspecialchars($o['name']) ?>">
+            <h3><?= htmlspecialchars($o['name']) ?></h3>
+            <p><?= htmlspecialchars($o['position']) ?></p>
+            <?php if (!empty($o['college_abbr'])): ?>
+                <span class="org-college"><?= htmlspecialchars($o['college_abbr']) ?></span>
+            <?php endif; ?>
+        </div>
+    <?php
+    };
+    ?>
+    <?php if ($noOfficials): ?>
+        <div class="org-empty">No officials have been published yet.</div>
+    <?php else: ?>
+
+        <div class="org-chart">
+
+            <!-- ===== CEO ===== -->
+            <?php if (!empty($ceoList)): ?>
+                <?php $renderNode($ceoList[0]); ?>
+                <div class="org-vline"></div>
+            <?php endif; ?>
+
+            <!-- ===== DIRECTOR ===== -->
+            <?php if (!empty($directorList)): ?>
+                <?php $renderNode($directorList[0]); ?>
+            <?php endif; ?>
+
+            <!-- ===== SPLIT: Heads (left) + Coordinators (right) + center line to Staffs ===== -->
+            <?php if (!empty($headsList) || !empty($coordinatorList)): ?>
+                <div class="org-split">
+
+                    <!-- Center line (extends from horizontal split down to bottom of split) -->
+                    <div class="org-center-line"></div>
+
+                    <div class="org-cols">
+
+                        <!-- LEFT: HEADS -->
+                        <div class="org-col">
+                            <div class="org-col-title">Heads</div>
+                            <div class="org-col-list">
+                                <?php if (empty($headsList)): ?>
+                                    <p style="color:#999; font-size:13px; font-style:italic;">No heads assigned.</p>
+                                <?php else: ?>
+                                    <?php foreach ($headsList as $head): ?>
+                                        <?php $renderNode($head); ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: COLLEGE COORDINATORS (2 sub-columns) -->
+                        <div class="org-col">
+                            <div class="org-col-title">College Coordinator Officers</div>
+                            <div class="org-col-list coordinator-2col">
+                                <?php if (empty($coordinatorList)): ?>
+                                    <p style="color:#999; font-size:13px; font-style:italic;">No coordinators assigned.</p>
+                                <?php else: ?>
+                                    <?php foreach ($coordinatorList as $coord): ?>
+                                        <?php $renderNode($coord); ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                    </div><!-- /.org-cols -->
+                </div><!-- /.org-split -->
+            <?php endif; ?>
+
+            <!-- ===== STAFFS ===== -->
+            <?php if (!empty($staffList)): ?>
+                <div class="org-staff-section">
+                    <div class="org-staff-title">Staffs</div>
+                    <div class="org-staff-grid">
+                        <?php foreach ($staffList as $staff): ?>
+                            <?php $renderNode($staff); ?>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php endforeach; ?>
-    </div>
+            <?php endif; ?>
+
+        </div><!-- /.org-chart -->
+
+    <?php endif; ?>
 </section>
 
 <!-- ================= CREST SECTION ================= -->
@@ -349,13 +448,13 @@
                         : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="520"><rect fill="%23e5e7eb" width="400" height="520"/><text x="50%" y="50%" font-family="sans-serif" font-size="18" fill="%239ca3af" text-anchor="middle" dy=".3em">No Cover</text></svg>';
                     ?>
                     <div class="crest-card"
-                         data-title="<?= htmlspecialchars($pub['title'] ?? '', ENT_QUOTES) ?>"
-                         data-category="<?= htmlspecialchars($pub['category'] ?? '', ENT_QUOTES) ?>"
-                         data-year="<?= htmlspecialchars($pub['year'] ?? '', ENT_QUOTES) ?>"
-                         data-description="<?= htmlspecialchars($pub['description'] ?? '', ENT_QUOTES) ?>"
-                         data-cover="<?= htmlspecialchars($pub['cover_image'] ?? '', ENT_QUOTES) ?>"
-                         data-pdf="<?= htmlspecialchars($pub['pdf_file'] ?? '', ENT_QUOTES) ?>"
-                         onclick="openCrestBook(this)">
+                        data-title="<?= htmlspecialchars($pub['title'] ?? '', ENT_QUOTES) ?>"
+                        data-category="<?= htmlspecialchars($pub['category'] ?? '', ENT_QUOTES) ?>"
+                        data-year="<?= htmlspecialchars($pub['year'] ?? '', ENT_QUOTES) ?>"
+                        data-description="<?= htmlspecialchars($pub['description'] ?? '', ENT_QUOTES) ?>"
+                        data-cover="<?= htmlspecialchars($pub['cover_image'] ?? '', ENT_QUOTES) ?>"
+                        data-pdf="<?= htmlspecialchars($pub['pdf_file'] ?? '', ENT_QUOTES) ?>"
+                        onclick="openCrestBook(this)">
                         <img src="<?= $cover ?>" alt="<?= htmlspecialchars($pub['title'] ?? 'Publication') ?>">
                         <h3><?= htmlspecialchars($pub['title'] ?? 'Untitled') ?></h3>
                     </div>
@@ -377,8 +476,8 @@
 
                 <div class="book-page left-page">
                     <img id="bookCoverImg"
-                         src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><rect fill='%23e5e7eb' width='600' height='800'/></svg>"
-                         alt="Cover">
+                        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><rect fill='%23e5e7eb' width='600' height='800'/></svg>"
+                        alt="Cover">
                 </div>
 
                 <div class="book-page right-page">
@@ -402,12 +501,12 @@
 </div>
 
 <script>
-    window.openCrestBook = function (el) {
+    window.openCrestBook = function(el) {
         const d = el.dataset;
 
-        const cover = d.cover && d.cover.trim() !== ''
-            ? '/' + d.cover
-            : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect fill="%23e5e7eb" width="600" height="800"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" fill="%239ca3af" text-anchor="middle" dy=".3em">No Cover</text></svg>';
+        const cover = d.cover && d.cover.trim() !== '' ?
+            '/' + d.cover :
+            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect fill="%23e5e7eb" width="600" height="800"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" fill="%239ca3af" text-anchor="middle" dy=".3em">No Cover</text></svg>';
 
         document.getElementById('bookCoverImg').src = cover;
         document.getElementById('bookTitle').textContent = d.title || 'Untitled';
@@ -417,9 +516,9 @@
             category + ' • ' + (d.year || '—');
 
         document.getElementById('bookDescription').textContent =
-            d.description && d.description.trim() !== ''
-                ? d.description
-                : 'No description available for this publication.';
+            d.description && d.description.trim() !== '' ?
+            d.description :
+            'No description available for this publication.';
 
         const actions = document.getElementById('bookActions');
         const pdfLink = document.getElementById('bookPdfLink');
@@ -435,16 +534,16 @@
         document.body.style.overflow = 'hidden';
     };
 
-    window.closeCrestBook = function () {
+    window.closeCrestBook = function() {
         document.getElementById('bookModal').classList.remove('active');
         document.body.style.overflow = '';
     };
 
-    document.getElementById('bookModal').addEventListener('click', function (e) {
+    document.getElementById('bookModal').addEventListener('click', function(e) {
         if (e.target === this) closeCrestBook();
     });
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeCrestBook();
     });
 </script>

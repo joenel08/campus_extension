@@ -137,7 +137,7 @@
             <h2><i class="fas fa-folder-open"></i> Submission Monitoring</h2>
             <p class="table-subtitle">View proposals, progress, and terminal reports grouped by proposal</p>
         </div>
-       <button class="btn btn-secondary print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+       <!-- <button class="btn btn-secondary print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print</button> -->
     </div>
 
     <!-- Filters (unchanged) -->
@@ -147,12 +147,12 @@
         <select name="status" class="form-input">
             <option value="">All</option>
             <!-- <option value="draft" <?= ($filters['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option> -->
-            <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option>
+            <!-- <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option> -->
             <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approved</option>
             <!-- <option value="pending_evaluation" <?= ($filters['status'] ?? '') === 'pending_evaluation' ? 'selected' : '' ?>>Pending Evaluation</option> -->
-            <option value="under_evaluation" <?= ($filters['status'] ?? '') === 'under_evaluation' ? 'selected' : '' ?>>Under Evaluation</option>
+            <!-- <option value="under_evaluation" <?= ($filters['status'] ?? '') === 'under_evaluation' ? 'selected' : '' ?>>Under Evaluation</option> -->
             <option value="revision" <?= ($filters['status'] ?? '') === 'revision' ? 'selected' : '' ?>>Revision</option>
-            <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Declined</option>
+            <!-- <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Declined</option> -->
         </select>
     </div>
     <div>
@@ -252,7 +252,7 @@
                             <?php if ($proposal['status'] === 'submitted'): ?>
                                 <button class="btn btn-sm btn-success" onclick="openActionModal(<?= $proposal['id'] ?>, 'approve')"><i class="fas fa-check"></i></button>
                                 <button class="btn btn-sm btn-warning" onclick="openActionModal(<?= $proposal['id'] ?>, 'revise')"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="openActionModal(<?= $proposal['id'] ?>, 'decline')"><i class="fas fa-times"></i></button>
+                                <!-- <button class="btn btn-sm btn-danger" onclick="openActionModal(<?= $proposal['id'] ?>, 'decline')"><i class="fas fa-times"></i></button> -->
 
                             <?php endif; ?>
                         </td>

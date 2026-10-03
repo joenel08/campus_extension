@@ -649,9 +649,9 @@ class SubmissionController extends \ExtensionistBaseController
                 </div>
                 <div><strong>Submitted:</strong> <?= date('M d, Y H:i', strtotime($report['created_at'])) ?></div>
                 <div><strong>Report Date:</strong> <?= htmlspecialchars($report['report_date'] ?? 'N/A') ?></div>
-                <div style="grid-column:1 / span 2;"><strong>Accomplishments:</strong> <?= nl2br(htmlspecialchars($report['accomplishments'] ?? 'N/A')) ?></div>
-                <div style="grid-column:1 / span 2;"><strong>Issues:</strong> <?= nl2br(htmlspecialchars($report['issues'] ?? 'N/A')) ?></div>
-                <div style="grid-column:1 / span 2;"><strong>Next Plan:</strong> <?= nl2br(htmlspecialchars($report['next_plan'] ?? 'N/A')) ?></div>
+                <!-- <div style="grid-column:1 / span 2;"><strong>Accomplishments:</strong> <?= nl2br(htmlspecialchars($report['accomplishments'] ?? 'N/A')) ?></div> -->
+                <!-- <div style="grid-column:1 / span 2;"><strong>Issues:</strong> <?= nl2br(htmlspecialchars($report['issues'] ?? 'N/A')) ?></div> -->
+                <!-- <div style="grid-column:1 / span 2;"><strong>Next Plan:</strong> <?= nl2br(htmlspecialchars($report['next_plan'] ?? 'N/A')) ?></div> -->
 
                 <?php if (!empty($report['attachment'])): ?>
                     <div style="grid-column:1 / span 2; margin-top:10px;">
