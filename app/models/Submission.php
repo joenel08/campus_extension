@@ -127,7 +127,22 @@ class Submission
             WHERE s.report_type = 'proposal'";
         $params = [];
 
-        if (!empty($filters['status'])) {
+        // --- special status filters ---
+        if (!empty($filters['status']) && $filters['status'] === 'ongoing') {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM progress_reports pr 
+                WHERE pr.submission_id = s.id
+              )
+              AND NOT EXISTS (
+                SELECT 1 FROM terminal_reports tr 
+                WHERE tr.submission_id = s.id
+              )";
+        } elseif (!empty($filters['status']) && $filters['status'] === 'completed') {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM terminal_reports tr 
+                WHERE tr.submission_id = s.id
+              )";
+        } elseif (!empty($filters['status'])) {
             $sql .= " AND s.status = ?";
             $params[] = $filters['status'];
         }
@@ -154,7 +169,6 @@ class Submission
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
     // ==================== UPDATE ADMIN STATUS ====================
     public function updateAdminStatus($id, $status, $remarks = null)
     {
@@ -270,50 +284,8 @@ class Submission
         return $stmt->fetchColumn();
     }
 
-    public function countCompleted($academic_year_id = null)
-    {
-        $sql = "
-            SELECT COUNT(DISTINCT s.id)
-            FROM submissions s
-            JOIN terminal_reports tr ON tr.submission_id = s.id
-            WHERE s.report_type = 'proposal' 
-              AND tr.status = 'approved'
-        ";
-        $params = [];
 
-        if ($academic_year_id) {
-            $sql .= " AND s.academic_year_id = ?";
-            $params[] = $academic_year_id;
-        }
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchColumn();
-    }
-
-    public function countOngoing($academic_year_id = null)
-    {
-        $sql = "
-            SELECT COUNT(DISTINCT s.id)
-            FROM submissions s
-            WHERE s.report_type = 'proposal'
-              AND s.status = 'approved'
-              AND NOT EXISTS (
-                  SELECT 1 FROM terminal_reports tr 
-                  WHERE tr.submission_id = s.id AND tr.status = 'approved'
-              )
-        ";
-        $params = [];
-
-        if ($academic_year_id) {
-            $sql .= " AND s.academic_year_id = ?";
-            $params[] = $academic_year_id;
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchColumn();
-    }
 
     // ==================== USER COUNTS (with academic year) ====================
     public function countProposalsByUser($user_id, $academic_year_id = null)
@@ -406,5 +378,58 @@ class Submission
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    // On-going = has progress report(s) AND no terminal report yet
+    public function countOngoing($academic_year_id = null)
+    {
+        $sql = "
+        SELECT COUNT(DISTINCT s.id)
+        FROM submissions s
+        WHERE s.report_type = 'proposal'
+          AND EXISTS (
+              SELECT 1 FROM progress_reports pr 
+              WHERE pr.submission_id = s.id
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM terminal_reports tr 
+              WHERE tr.submission_id = s.id
+          )
+    ";
+        $params = [];
+
+        if ($academic_year_id) {
+            $sql .= " AND s.academic_year_id = ?";
+            $params[] = $academic_year_id;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
+    }
+
+    // Completed = has terminal report (regardless of progress)
+    public function countCompleted($academic_year_id = null)
+    {
+        $sql = "
+        SELECT COUNT(DISTINCT s.id)
+        FROM submissions s
+        WHERE s.report_type = 'proposal'
+          AND EXISTS (
+              SELECT 1 FROM terminal_reports tr 
+              WHERE tr.submission_id = s.id
+          )
+    ";
+        $params = [];
+
+        if ($academic_year_id) {
+            $sql .= " AND s.academic_year_id = ?";
+            $params[] = $academic_year_id;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
     }
 }

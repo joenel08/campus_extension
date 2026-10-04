@@ -4,11 +4,14 @@ namespace Extensionist;
 
 require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/Submission.php';
+require_once __DIR__ . '/../../../models/Evaluation.php';
+
 
 class DashboardController extends \ExtensionistBaseController
 {
     private $proposalModel;
     private $submissionModel;
+    private $evaluationModel;
     private $db;
 
     public function __construct()
@@ -20,6 +23,8 @@ class DashboardController extends \ExtensionistBaseController
         $this->proposalModel = new \Proposal($pdo);
         $this->db = $pdo;
         $this->submissionModel = new \Submission($pdo);
+        $this->evaluationModel = new \Evaluation($pdo);
+
     }
 
 
@@ -56,33 +61,25 @@ class DashboardController extends \ExtensionistBaseController
 
     public function index()
     {
-        $user_id = $_SESSION['user_id'];
-        $college_id = $_SESSION['college_id'] ?? null;
-        $academic_year_id = $_SESSION['academic_year_id'] ?? null;
+        $evaluator_id = $_SESSION['user_id'];
 
-        // Fetch current user data
+        // Fetch current user
         $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
+        $stmt->execute([$evaluator_id]);
         $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-       $proposals = [];
-    if ($college_id) {
-        $proposals = $this->proposalModel->getOpenByCollege($college_id, $academic_year_id);
-    }
-
-    $total     = $this->submissionModel->countProposalsByUser($user_id, $academic_year_id);
-    $pending   = $this->submissionModel->countPendingByUser($user_id, $academic_year_id);
-    $completed = $this->submissionModel->countCompletedByUser($user_id, $academic_year_id);
+        // === STATS ===
+        $totalAssigned = $this->evaluationModel->countAssigned($evaluator_id);
+        $ongoing       = $this->evaluationModel->countOngoing($evaluator_id);
+        $completed     = $this->evaluationModel->countCompleted($evaluator_id);
 
         $this->render('dashboard', [
-            'proposals'   => $proposals,
-            'total'       => $total,
-            'pending'     => $pending,
-            'completed'   => $completed,
-            'currentUser' => $currentUser,
+            'currentUser'   => $currentUser,
+            'totalAssigned' => $totalAssigned,
+            'ongoing'       => $ongoing,
+            'completed'     => $completed,
         ]);
     }
-
     public function updateProfile()
     {
         $user_id = $_SESSION['user_id'];

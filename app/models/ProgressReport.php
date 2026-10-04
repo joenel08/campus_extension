@@ -45,18 +45,15 @@ class ProgressReport
     public function update($id, $data)
     {
         $stmt = $this->db->prepare("
-            UPDATE progress_reports
-            SET report_date = ?, accomplishments = ?, issues = ?, next_plan = ?, attachment = ?, status = ?
-            WHERE id = ?
-        ");
+        UPDATE progress_reports
+        SET report_date = ?, attachment = ?, status = ?
+        WHERE id = ?
+    ");
         return $stmt->execute([
             $data['report_date'],
-            $data['accomplishments'],
-            $data['issues'],
-            $data['next_plan'],
             $data['attachment'] ?? null,
             $data['status'] ?? 'draft',
-            $id
+            $id,
         ]);
     }
 

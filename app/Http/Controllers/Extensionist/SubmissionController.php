@@ -178,7 +178,74 @@ class SubmissionController extends \ExtensionistBaseController
     public function edit()
     {
         $id = $_GET['id'] ?? 0;
+        $type = $_GET['type'] ?? 'proposal';
         $user_id = $_SESSION['user_id'];
+        $college_abbr = $_SESSION['college_abbr'] ?? '';
+        $colleges = $this->collegeModel->getAll();
+        $user_name = $_SESSION['user_name'] ?? '';
+
+        if ($type === 'progress') {
+            // Fetch progress report
+            $stmt = $this->db->prepare("SELECT * FROM progress_reports WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $report = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$report) {
+                $_SESSION['error'] = 'Progress report not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            // Build form_data structure that the _progress_form expects
+            $form_data = [
+                'progress_info' => [
+                    'report_date' => $report['report_date'],
+                ],
+                'attachment' => $report['attachment'],
+            ];
+
+            $this->render('submissions/edit', [
+                'submission'     => $report,     // the report row itself
+                'form_data'      => $form_data,
+                'colleges'       => $colleges,
+                'user_college'   => $college_abbr,
+                'user_name'      => $user_name,
+                'report_type'    => 'progress',
+            ]);
+            return;
+        }
+
+        if ($type === 'terminal') {
+            // Fetch terminal report
+            $stmt = $this->db->prepare("SELECT * FROM terminal_reports WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $report = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$report) {
+                $_SESSION['error'] = 'Terminal report not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $form_data = [
+                'terminal_info' => [
+                    'completion_date' => $report['completion_date'],
+                ],
+                'attachment' => $report['attachment'],
+            ];
+
+            $this->render('submissions/edit', [
+                'submission'     => $report,
+                'form_data'      => $form_data,
+                'colleges'       => $colleges,
+                'user_college'   => $college_abbr,
+                'user_name'      => $user_name,
+                'report_type'    => 'terminal',
+            ]);
+            return;
+        }
+
+        // Default: proposal
         $submission = $this->submissionModel->find($id, $user_id);
         if (!$submission) {
             $_SESSION['error'] = 'Submission not found.';
@@ -186,17 +253,38 @@ class SubmissionController extends \ExtensionistBaseController
             exit;
         }
         $form_data = json_decode($submission['form_data'], true);
-        $college_abbr = $_SESSION['college_abbr'] ?? '';
-        $colleges = $this->collegeModel->getAll();
-        $user_name = $_SESSION['user_name'] ?? '';
+
         $this->render('submissions/edit', [
-            'submission' => $submission,
-            'form_data' => $form_data,
-            'colleges' => $colleges,
+            'submission'   => $submission,
+            'form_data'    => $form_data,
+            'colleges'     => $colleges,
             'user_college' => $college_abbr,
-            'user_name' => $user_name,
+            'user_name'    => $user_name,
+            'report_type'  => 'proposal',
         ]);
     }
+    // public function edit()
+    // {
+    //     $id = $_GET['id'] ?? 0;
+    //     $user_id = $_SESSION['user_id'];
+    //     $submission = $this->submissionModel->find($id, $user_id);
+    //     if (!$submission) {
+    //         $_SESSION['error'] = 'Submission not found.';
+    //         header('Location: /extensionist/submissions');
+    //         exit;
+    //     }
+    //     $form_data = json_decode($submission['form_data'], true);
+    //     $college_abbr = $_SESSION['college_abbr'] ?? '';
+    //     $colleges = $this->collegeModel->getAll();
+    //     $user_name = $_SESSION['user_name'] ?? '';
+    //     $this->render('submissions/edit', [
+    //         'submission' => $submission,
+    //         'form_data' => $form_data,
+    //         'colleges' => $colleges,
+    //         'user_college' => $college_abbr,
+    //         'user_name' => $user_name,
+    //     ]);
+    // }
 
     // public function store()
     // {
@@ -400,26 +488,26 @@ class SubmissionController extends \ExtensionistBaseController
                 );
             }
         } elseif ($report_type === 'terminal') {
-    if (!$submission_id) {
-        $_SESSION['error'] = 'Missing parent submission.';
-        header('Location: /extensionist/submissions');
-        exit;
-    }
-    if ($this->terminalReportModel->hasTerminalReport($submission_id)) {
-        $_SESSION['error'] = 'A terminal report already exists for this proposal.';
-        header('Location: /extensionist/submissions');
-        exit;
-    }
+            if (!$submission_id) {
+                $_SESSION['error'] = 'Missing parent submission.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            if ($this->terminalReportModel->hasTerminalReport($submission_id)) {
+                $_SESSION['error'] = 'A terminal report already exists for this proposal.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
 
-    $this->terminalReportModel->create($submission_id, $user_id, [
-        'completion_date'  => date('Y-m-d'),   // <-- always today
-        'overall_status'   => 'completed',      // <-- default (or remove if column allows NULL)
-        'final_summary'    => '',
-        'lessons_learned'  => '',
-        'recommendations'  => '',
-        'attachment'       => $attachment,
-        'status'           => $status,
-    ], $academic_year_id);
+            $this->terminalReportModel->create($submission_id, $user_id, [
+                'completion_date'  => date('Y-m-d'),   // <-- always today
+                'overall_status'   => 'completed',      // <-- default (or remove if column allows NULL)
+                'final_summary'    => '',
+                'lessons_learned'  => '',
+                'recommendations'  => '',
+                'attachment'       => $attachment,
+                'status'           => $status,
+            ], $academic_year_id);
 
             if ($status === 'submitted') {
                 $adminIds = $this->notificationModel->getAdmins();
@@ -452,7 +540,77 @@ class SubmissionController extends \ExtensionistBaseController
     public function update()
     {
         $id = $_POST['id'] ?? 0;
+        $report_type = $_POST['report_type'] ?? 'proposal';
         $user_id = $_SESSION['user_id'];
+        $status = $_POST['status'] ?? 'draft';
+
+        // ============ PROGRESS ============
+        if ($report_type === 'progress') {
+            $stmt = $this->db->prepare("SELECT * FROM progress_reports WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $report = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$report) {
+                $_SESSION['error'] = 'Progress report not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $attachment = $report['attachment'];
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                if ($attachment && file_exists($attachment)) {
+                    unlink($attachment);
+                }
+                $attachment = $this->handleFileUpload($_FILES['attachment']);
+            }
+
+            $this->progressReportModel->update($id, [
+                'report_date' => date('Y-m-d'),
+                'attachment'  => $attachment,
+                'status'      => $status,
+            ]);
+
+            $_SESSION['success'] = 'Progress report updated.';
+            header('Location: /extensionist/submissions');
+            exit;
+        }
+
+        // ============ TERMINAL ============
+        if ($report_type === 'terminal') {
+            $stmt = $this->db->prepare("SELECT * FROM terminal_reports WHERE id = ? AND user_id = ?");
+            $stmt->execute([$id, $user_id]);
+            $report = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if (!$report) {
+                $_SESSION['error'] = 'Terminal report not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $attachment = $report['attachment'];
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                if ($attachment && file_exists($attachment)) {
+                    unlink($attachment);
+                }
+                $attachment = $this->handleFileUpload($_FILES['attachment']);
+            }
+
+            $this->terminalReportModel->update($id, [
+                'completion_date' => date('Y-m-d'),
+                'overall_status'  => 'completed',
+                'final_summary'   => '',
+                'lessons_learned' => '',
+                'recommendations' => '',
+                'attachment'      => $attachment,
+                'status'          => $status,
+            ]);
+
+            $_SESSION['success'] = 'Terminal report updated.';
+            header('Location: /extensionist/submissions');
+            exit;
+        }
+
+        // ============ PROPOSAL (default) ============
         $submission = $this->submissionModel->find($id, $user_id);
         if (!$submission) {
             $_SESSION['error'] = 'Submission not found.';
@@ -460,8 +618,7 @@ class SubmissionController extends \ExtensionistBaseController
             exit;
         }
 
-        $report_type = $submission['report_type'];
-        $form_data = $this->buildFormData($_POST, $report_type);
+        $form_data = $this->buildFormData($_POST, 'proposal');
 
         $oldData = json_decode($submission['form_data'], true);
         if (isset($oldData['attachment'])) {
@@ -471,8 +628,6 @@ class SubmissionController extends \ExtensionistBaseController
         if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
             $form_data['attachment'] = $this->handleFileUpload($_FILES['attachment'], $oldData['attachment'] ?? null);
         }
-
-        $status = $_POST['status'] ?? 'draft';
 
         if ($this->submissionModel->update($id, $form_data, $status)) {
             $_SESSION['success'] = 'Submission updated.';
@@ -484,7 +639,6 @@ class SubmissionController extends \ExtensionistBaseController
             exit;
         }
     }
-
     public function delete()
     {
         $id = $_POST['id'] ?? 0;
@@ -610,14 +764,14 @@ class SubmissionController extends \ExtensionistBaseController
 
             $data['components'] = $components;
         } elseif ($report_type === 'progress') {
-    $data['progress_info'] = [
-        'report_date' => $post['report_date'] ?? '',
-    ];
-} elseif ($report_type === 'terminal') {
-    $data['terminal_info'] = [
-        'completion_date' => $post['completion_date'] ?? date('Y-m-d'),
-    ];
-}
+            $data['progress_info'] = [
+                'report_date' => $post['report_date'] ?? '',
+            ];
+        } elseif ($report_type === 'terminal') {
+            $data['terminal_info'] = [
+                'completion_date' => $post['completion_date'] ?? date('Y-m-d'),
+            ];
+        }
 
         return $data;
     }

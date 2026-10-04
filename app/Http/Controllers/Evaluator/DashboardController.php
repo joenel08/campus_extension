@@ -35,33 +35,23 @@ class DashboardController extends \EvaluatorBaseController
         $stmt->execute([$evaluator_id]);
         $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Stats
-        $assigned = $this->evaluationModel->getAssignedProposals($evaluator_id);
-
-        $totalAssigned = count($assigned);
-        $evaluated = 0;
-        $pending = 0;
-
-        foreach ($assigned as $row) {
-            $vote = $this->evaluationModel->getBySubmissionAndEvaluator($row['submission_id'], $evaluator_id, 'proposal');
-            if ($vote) {
-                $evaluated++;
-            } else {
-                $pending++;
-            }
-        }
+        // === STATS ===
+        $totalAssigned = $this->evaluationModel->countAssigned($evaluator_id);
+        $ongoing       = $this->evaluationModel->countOngoing($evaluator_id);
+        $completed     = $this->evaluationModel->countCompleted($evaluator_id);
 
         $this->render('dashboard', [
-            'currentUser'    => $currentUser,
-            'totalAssigned'  => $totalAssigned,
-            'evaluated'      => $evaluated,
-            'pending'        => $pending,
+            'currentUser'   => $currentUser,
+            'totalAssigned' => $totalAssigned,
+            'ongoing'       => $ongoing,
+            'completed'     => $completed,
         ]);
     }
 
     // ===== EVALUATIONS PAGE (Assigned table) =====
     public function evaluations()
     {
+        $filter = $_GET['filter'] ?? null;
         $evaluator_id = $_SESSION['user_id'];
 
         // Fetch current user
@@ -105,9 +95,23 @@ class DashboardController extends \EvaluatorBaseController
             ];
         }
 
+        // === APPLY FILTER AFTER $grouped IS FULLY BUILT ===
+        if ($filter === 'ongoing') {
+            $grouped = array_values(array_filter($grouped, function ($g) {
+                $hasProgress = !empty($g['progress_reports']);
+                $hasTerminal = !empty($g['terminal_report']);
+                return $hasProgress && !$hasTerminal;
+            }));
+        } elseif ($filter === 'completed') {
+            $grouped = array_values(array_filter($grouped, function ($g) {
+                return !empty($g['terminal_report']);
+            }));
+        }
+
         $this->render('evaluations', [
-            'grouped' => $grouped,
+            'grouped'     => $grouped,
             'currentUser' => $currentUser,
+            'filter'      => $filter,
         ]);
     }
 

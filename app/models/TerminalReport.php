@@ -47,15 +47,12 @@ class TerminalReport
     {
         $stmt = $this->db->prepare("
             UPDATE terminal_reports
-            SET completion_date = ?, overall_status = ?, final_summary = ?, lessons_learned = ?, recommendations = ?, attachment = ?, status = ?
+            SET completion_date = ?, overall_status = ?, attachment = ?, status = ?
             WHERE id = ?
         ");
         return $stmt->execute([
             $data['completion_date'],
-            $data['overall_status'],
-            $data['final_summary'],
-            $data['lessons_learned'],
-            $data['recommendations'],
+            $data['overall_status'],        
             $data['attachment'] ?? null,
             $data['status'] ?? 'draft',
             $id

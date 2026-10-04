@@ -82,3 +82,4 @@ function prevPage() {
     showSlide(currentSlide);
 
 }
+

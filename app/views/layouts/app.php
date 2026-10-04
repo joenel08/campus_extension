@@ -30,7 +30,28 @@
 
     </div>
 
-
+    <!-- ============================================================
+     GLOBAL CONFIRMATION MODAL
+     ============================================================ -->
+    <div id="confirmModal" class="confirm-modal-overlay" style="display:none;">
+        <div class="confirm-modal-box">
+            <div class="confirm-modal-icon" id="confirmModalIcon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 class="confirm-modal-title" id="confirmModalTitle">Are you sure?</h3>
+            <p class="confirm-modal-message" id="confirmModalMessage">
+                This action cannot be undone.
+            </p>
+            <div class="confirm-modal-actions">
+                <button type="button" class="confirm-btn confirm-btn-cancel" id="confirmModalCancel">
+                    Cancel
+                </button>
+                <button type="button" class="confirm-btn confirm-btn-ok" id="confirmModalOk">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Heartbeat: update last_activity every 30s

@@ -64,3 +64,92 @@ function filterReports() {
         result.innerHTML = `<div class="card" style="text-align:center;padding:60px;color:#777;">No reports found.</div>`;
     }
 }
+
+
+window.showConfirm = function (options) {
+    const modal = document.getElementById('confirmModal');
+    const icon = document.getElementById('confirmModalIcon');
+    const title = document.getElementById('confirmModalTitle');
+    const message = document.getElementById('confirmModalMessage');
+    const okBtn = document.getElementById('confirmModalOk');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+
+    // Icon + variant
+    const variant = options.variant || 'warning';
+    icon.className = 'confirm-modal-icon ' + (variant === 'warning' ? '' : variant);
+
+    const iconMap = {
+        warning: 'fa-exclamation-triangle',
+        danger: 'fa-trash-alt',
+        success: 'fa-check-circle',
+        info: 'fa-info-circle'
+    };
+    icon.innerHTML = '<i class="fas ' + (iconMap[variant] || iconMap.warning) + '"></i>';
+
+    title.textContent = options.title || 'Are you sure?';
+    message.textContent = options.message || 'This action cannot be undone.';
+    okBtn.textContent = options.okText || 'Confirm';
+    cancelBtn.textContent = options.cancelText || 'Cancel';
+
+    // OK button style
+    okBtn.className = 'confirm-btn confirm-btn-ok';
+    if (variant === 'success') okBtn.classList.add('success');
+    if (variant === 'info') okBtn.classList.add('info');
+
+    // Remove any previous listeners
+    const newOk = okBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    // Attach fresh listeners
+    newOk.addEventListener('click', function () {
+        closeConfirm();
+        if (typeof options.onConfirm === 'function') options.onConfirm();
+    });
+    newCancel.addEventListener('click', closeConfirm);
+
+    modal.style.display = 'flex';
+};
+
+window.closeConfirm = function () {
+    document.getElementById('confirmModal').style.display = 'none';
+};
+
+// Close on outside click
+document.addEventListener('click', function (e) {
+    const modal = document.getElementById('confirmModal');
+    if (e.target === modal) modal.style.display = 'none';
+});
+
+// Close on Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('confirmModal');
+        if (modal) modal.style.display = 'none';
+    }
+});
+
+
+document.addEventListener('submit', function (e) {
+    const form = e.target;
+
+    // Only intercept forms marked with class="confirm-form"
+    if (!form.classList.contains('confirm-form')) return;
+
+    // If we already confirmed once, let it go through
+    if (form.dataset.confirmed === '1') return;
+
+    e.preventDefault();
+
+    window.showConfirm({
+        title: form.dataset.title || 'Are you sure?',
+        message: form.dataset.message || 'This action cannot be undone.',
+        okText: form.dataset.ok || 'Confirm',
+        variant: form.dataset.variant || 'warning',
+        onConfirm: function () {
+            form.dataset.confirmed = '1';
+            form.submit(); // native submit bypasses the submit event
+        }
+    });
+});

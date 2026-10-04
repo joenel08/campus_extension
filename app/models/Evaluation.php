@@ -41,4 +41,58 @@ class Evaluation
         $stmt->execute([$submission_id, $evaluator_id, $report_type]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    // Total proposals assigned to this evaluator
+    public function countAssigned($evaluator_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT COUNT(DISTINCT s.id)
+        FROM submission_evaluators se
+        JOIN submissions s ON se.submission_id = s.id
+        WHERE se.evaluator_id = ?
+          AND s.report_type = 'proposal'
+    ");
+        $stmt->execute([$evaluator_id]);
+        return $stmt->fetchColumn();
+    }
+
+    // On-going = has progress report(s), NO terminal report
+    public function countOngoing($evaluator_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT COUNT(DISTINCT s.id)
+        FROM submission_evaluators se
+        JOIN submissions s ON se.submission_id = s.id
+        WHERE se.evaluator_id = ?
+          AND s.report_type = 'proposal'
+          AND EXISTS (
+              SELECT 1 FROM progress_reports pr 
+              WHERE pr.submission_id = s.id
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM terminal_reports tr 
+              WHERE tr.submission_id = s.id
+          )
+    ");
+        $stmt->execute([$evaluator_id]);
+        return $stmt->fetchColumn();
+    }
+
+    // Completed = has terminal report
+    public function countCompleted($evaluator_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT COUNT(DISTINCT s.id)
+        FROM submission_evaluators se
+        JOIN submissions s ON se.submission_id = s.id
+        WHERE se.evaluator_id = ?
+          AND s.report_type = 'proposal'
+          AND EXISTS (
+              SELECT 1 FROM terminal_reports tr 
+              WHERE tr.submission_id = s.id
+          )
+    ");
+        $stmt->execute([$evaluator_id]);
+        return $stmt->fetchColumn();
+    }
 }
