@@ -15,7 +15,7 @@
     <div class="container">
         <div class="left-side">
             <div class="overlay">
-                <img src="/images/isu_logo.png" class="top-logo" alt="ISU Logo">
+                <!-- <img src="/images/isu_logo.png" class="top-logo" alt="ISU Logo"> -->
             </div>
         </div>
         <div class="right-side">

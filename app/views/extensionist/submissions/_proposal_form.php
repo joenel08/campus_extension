@@ -163,7 +163,7 @@ $budget = $form_data['budget_breakdown'] ?? [];
     <label class="submission-label"><i class="fas fa-paperclip"></i> Attach File</label>
 
     <!-- Download Template -->
-    <div style="margin-bottom:12px; padding:12px; background:#e8f0fe; border-radius:6px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <!-- <div style="margin-bottom:12px; padding:12px; background:#e8f0fe; border-radius:6px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
         <div style="display:flex; align-items:center; gap:10px;">
             <i class="fas fa-file-word" style="font-size:20px; color:#2563eb;"></i>
             <div>
@@ -174,7 +174,7 @@ $budget = $form_data['budget_breakdown'] ?? [];
         <a href="/templates/proposal_template.docx" download class="btn btn-sm btn-primary" style="text-decoration:none; padding:8px 16px; background:#2563eb; color:#fff; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
             <i class="fas fa-download"></i> Download Template
         </a>
-    </div>
+    </div> -->
 
     <!-- Existing file display (if any) -->
     <?php if (!empty($form_data['attachment'])): ?>
