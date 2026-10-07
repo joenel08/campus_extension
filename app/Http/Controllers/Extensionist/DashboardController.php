@@ -27,7 +27,33 @@ class DashboardController extends \ExtensionistBaseController
 
     }
 
+public function index()
+{
+    $user_id = $_SESSION['user_id'];
+    $college_id = $_SESSION['college_id'] ?? null;
 
+    $proposals = [];
+    if ($college_id) {
+        $proposals = $this->proposalModel->getOpenByCollege($college_id);
+    }
+
+    $total     = $this->submissionModel->countProposalsByUser($user_id);
+    $pending   = $this->submissionModel->countPendingByUser($user_id);
+    $completed = $this->submissionModel->countCompletedByUser($user_id);
+
+    // You still need $currentUser for the profile modal / hero
+    $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    $this->render('dashboard', [
+        'currentUser' => $currentUser,
+        'proposals'   => $proposals,
+        'total'       => $total,
+        'pending'     => $pending,
+        'completed'   => $completed,
+    ]);
+}
 
     //     public function index()
     // {
@@ -59,27 +85,27 @@ class DashboardController extends \ExtensionistBaseController
     // }
 
 
-    public function index()
-    {
-        $evaluator_id = $_SESSION['user_id'];
+    // public function index()
+    // {
+    //     $evaluator_id = $_SESSION['user_id'];
 
-        // Fetch current user
-        $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
-        $stmt->execute([$evaluator_id]);
-        $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
+    //     // Fetch current user
+    //     $stmt = $this->db->prepare("SELECT id, name, email, profile_picture FROM users WHERE id = ?");
+    //     $stmt->execute([$evaluator_id]);
+    //     $currentUser = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // === STATS ===
-        $totalAssigned = $this->evaluationModel->countAssigned($evaluator_id);
-        $ongoing       = $this->evaluationModel->countOngoing($evaluator_id);
-        $completed     = $this->evaluationModel->countCompleted($evaluator_id);
+    //     // === STATS ===
+    //     $totalAssigned = $this->evaluationModel->countAssigned($evaluator_id);
+    //     $ongoing       = $this->evaluationModel->countOngoing($evaluator_id);
+    //     $completed     = $this->evaluationModel->countCompleted($evaluator_id);
 
-        $this->render('dashboard', [
-            'currentUser'   => $currentUser,
-            'totalAssigned' => $totalAssigned,
-            'ongoing'       => $ongoing,
-            'completed'     => $completed,
-        ]);
-    }
+    //     $this->render('dashboard', [
+    //         'currentUser'   => $currentUser,
+    //         'totalAssigned' => $totalAssigned,
+    //         'ongoing'       => $ongoing,
+    //         'completed'     => $completed,
+    //     ]);
+    // }
     public function updateProfile()
     {
         $user_id = $_SESSION['user_id'];

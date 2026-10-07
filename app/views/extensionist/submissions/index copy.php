@@ -30,11 +30,11 @@
                 <p style="color:#999; text-align:center; padding:20px;">No open proposals available for submission.</p>
             <?php else: ?>
                 <?php foreach ($proposals as $p): ?>
-                    <div class="proposal-option" onclick="selectProposal(<?= (int)$p['id'] ?>)" style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; cursor:pointer; transition:0.3s;">
+                    <div class="proposal-option" onclick="selectProposal(<?= $p['id'] ?>)" style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; cursor:pointer; transition:0.3s;">
                         <h4 style="color:#183153;"><?= htmlspecialchars($p['title']) ?></h4>
                         <p style="color:#6b7280; font-size:14px;">
-                            Deadline: <?= safe_date($p['closing_date']) ?> |
-                            Description: <?= str_replace('_', ' ', safe_ucfirst($p['description'])) ?>
+                            Deadline: <?= date('M d, Y', strtotime($p['closing_date'])) ?> |
+                            Description: <?= str_replace('_', ' ', ucfirst($p['description'])) ?>
                         </p>
                     </div>
                 <?php endforeach; ?>
@@ -57,78 +57,73 @@
                 <th>Detailed Proposal</th>
                 <th>Progress Reports</th>
                 <th>Terminal Report</th>
+
             </tr>
         </thead>
         <tbody>
             <?php if (empty($grouped)): ?>
                 <tr>
-                    <td colspan="8" style="text-align:center;color:#777;">No submissions yet.</td>
+                    <td colspan="7" style="text-align:center;color:#777;">No submissions yet.</td>
                 </tr>
             <?php else: ?>
                 <?php $counter = 1; ?>
                 <?php foreach ($grouped as $pid => $data): ?>
-                    <?php
-                    $proposal = $data['proposal_submission'];
-                    if (!$proposal) continue;
-
-                    $dp = $data['detailed_proposal'] ?? null;
-                    $dpApproved = $dp && $dp['status'] === 'approved';
-
-                    $statusClass = [
-                        'draft'              => 'badge-pending',
-                        'submitted'          => 'badge-approved',
-                        'approved'           => 'badge-approved',
-                        'rejected'           => 'badge-declined',
-                        'revision'           => 'badge-pending',
-                        'pending_evaluation' => 'badge-pending',
-                        'under_evaluation'   => 'badge-approved',
-                    ];
+                    <?php $proposal = $data['proposal_submission']; ?>
+                    <?php if (!$proposal) continue; // should not happen 
                     ?>
                     <tr>
                         <td><?= $counter++ ?></td>
                         <td><?= htmlspecialchars($proposal['academic_year_label'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($data['proposal_title']) ?></td>
-
-                        <!-- PROPOSAL STATUS -->
                         <td>
+                            <?php
+                            $statusClass = [
+                                'draft' => 'badge-pending',
+                                'submitted' => 'badge-approved',
+                                'approved' => 'badge-approved',
+                                'rejected' => 'badge-declined',
+                                'revision' => 'badge-pending'
+                            ];
+                            ?>
                             <span class="badge <?= $statusClass[$proposal['status']] ?? 'badge-pending' ?>">
-                                <?= safe_ucfirst($proposal['status']) ?>
+                                <?= ucfirst($proposal['status']) ?>
                             </span>
 
-                            <a href="/extensionist/submissions/show?id=<?= (int)$proposal['id'] ?>" class="btn btn-sm btn-edit">
-                                <i class="fas fa-eye"></i>
-                            </a>
 
-                            <?php if (in_array($proposal['status'], ['draft','revision'], true)): ?>
-                                <a href="/extensionist/submissions/edit?id=<?= (int)$proposal['id'] ?>" class="btn btn-sm btn-edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                            <a href="/extensionist/submissions/show?id=<?= $proposal['id'] ?>" class="btn btn-sm btn-edit"><i class="fas fa-eye"></i></a>
+                            <?php if ($proposal['status'] === 'draft' || $proposal['status'] === 'revision'): ?>
+                                <a href="/extensionist/submissions/edit?id=<?= $proposal['id'] ?>" class="btn btn-sm btn-edit"><i class="fas fa-edit"></i></a>
                                 <?php if ($proposal['status'] === 'draft'): ?>
                                     <form method="POST" action="/extensionist/submissions/delete" style="display:inline;" onsubmit="return confirm('Delete this submission?')">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= (int)$proposal['id'] ?>">
+                                        <input type="hidden" name="id" value="<?= $proposal['id'] ?>">
                                         <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                     </form>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </td>
-
-                        <td><?= safe_date($proposal['created_at']) ?></td>
-
-                        <!-- DETAILED PROPOSAL -->
+                        <td><?= date('M d, Y', strtotime($proposal['created_at'])) ?></td>
                         <td>
-                            <?php if ($proposal['status'] !== 'approved'): ?>
+                            <?php
+                            $dp = $data['detailed_proposal'] ?? null;
+                            if (!$proposal || $proposal['status'] !== 'approved'):
+                                // Proposal not yet approved — detailed proposal not available
+                            ?>
                                 <span style="color:#999; font-size:12px;">—</span>
-                            <?php elseif (!$dp): ?>
+                            <?php
+                            elseif (!$dp):
+                                // Approved, but no detailed yet — show submit button
+                            ?>
                                 <a href="/extensionist/submissions/create?submission_id=<?= (int)$proposal['id'] ?>&type=detailed_proposal" class="btn btn-sm btn-primary">
                                     <i class="fas fa-plus"></i> Submit Detailed
                                 </a>
-                            <?php else: ?>
-                                <span class="badge <?= $statusClass[$dp['status']] ?? 'badge-pending' ?>">
-                                    <?= safe_ucfirst($dp['status']) ?>
-                                </span>
+                            <?php
+                            else:
+                                $dpStatus = $dp['status'];
+                                $dpClass = $statusClass[$dpStatus] ?? 'badge-pending';
+                            ?>
+                                <span class="badge <?= $dpClass ?>"><?= safe_ucfirst($dpStatus) ?></span>
 
-                                <?php if (in_array($dp['status'], ['draft','revision'], true)): ?>
+                                <?php if (in_array($dpStatus, ['draft', 'revision'], true)): ?>
                                     <a href="/extensionist/submissions/edit?id=<?= (int)$dp['id'] ?>&type=detailed_proposal" class="btn btn-xs btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -139,17 +134,18 @@
                                 </button>
                             <?php endif; ?>
                         </td>
+                        <td style="align-items: center;">
 
-                        <!-- PROGRESS REPORTS -->
-                        <td>
                             <?php if (!empty($data['progress_reports'])): ?>
                                 <?php foreach ($data['progress_reports'] as $idx => $pr): ?>
                                     <div style="display:flex; align-items:center; gap:5px; margin:2px 0;">
                                         <span style="font-size:12px; min-width:50px;">Progress Report<?= $idx + 1 ?></span>
-                                        <span class="badge <?= $statusClass[$pr['status']] ?? 'badge-pending' ?>">
-                                            <?= safe_ucfirst($pr['status']) ?>
+
+                                        <span class="badge <?= $pr['status'] === 'approved' ? 'badge-approved' : ($pr['status'] === 'submitted' ? 'badge-approved' : 'badge-pending') ?>">
+                                            <?= ucfirst($pr['status']) ?>
                                         </span>
-                                        <button class="btn btn-xs btn-edit" onclick="viewReport(<?= (int)$pr['id'] ?>, 'progress')">
+
+                                        <button class="btn btn-xs btn-edit" onclick="viewReport(<?= $pr['id'] ?>, 'progress')">
                                             <i class="fas fa-eye" style="font-size:11px;"></i>
                                         </button>
                                     </div>
@@ -158,27 +154,27 @@
                                 <span style="color:#999; font-size:12px;">None</span>
                             <?php endif; ?>
 
-                            <?php if ($proposal['status'] === 'approved' && $dpApproved): ?>
-                                <a href="/extensionist/submissions/create?submission_id=<?= (int)$proposal['id'] ?>&type=progress" class="btn btn-sm btn-primary" style="margin-top:6px; display:inline-block;">
-                                    <i class="fas fa-plus"></i> Submit Progress
-                                </a>
-                            <?php elseif ($proposal['status'] === 'approved' && !$dpApproved): ?>
-                                <div style="color:#999; font-size:12px; margin-top:6px;">Detailed proposal must be approved first</div>
-                            <?php endif; ?>
+                            <?php
+$dpApproved = $dp && $dp['status'] === 'approved';
+?>
+<?php if ($proposal['status'] === 'approved' && $dpApproved): ?>
+    <a href="/extensionist/submissions/create?submission_id=<?= (int)$proposal['id'] ?>&type=progress" ...>Submit Progress</a>
+<?php elseif ($proposal['status'] === 'approved' && !$dpApproved): ?>
+    <span style="color:#999; font-size:12px;">Detailed proposal must be approved first</span>
+<?php endif; ?>
                         </td>
-
-                        <!-- TERMINAL REPORT -->
                         <td>
-                            <?php if ($proposal['status'] === 'approved' && $dpApproved): ?>
+                            <?php if ($proposal['status'] === 'approved'): ?>
                                 <?php if ($data['terminal_report']): ?>
-                                    <span class="badge <?= $statusClass[$data['terminal_report']['status']] ?? 'badge-pending' ?>">
-                                        <?= safe_ucfirst($data['terminal_report']['status']) ?>
+
+                                    <span class="badge <?= $data['terminal_report']['status'] === 'approved' ? 'badge-approved' : ($data['terminal_report']['status'] === 'submitted' ? 'badge-approved' : 'badge-pending') ?>">
+                                        <?= ucfirst($data['terminal_report']['status']) ?>
                                     </span>
-                                    <button class="btn btn-xs btn-edit" onclick="viewReport(<?= (int)$data['terminal_report']['id'] ?>, 'terminal')">
+                                    <button class="btn btn-xs btn-edit" onclick="viewReport(<?= $data['terminal_report']['id'] ?>, 'terminal')">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 <?php elseif ($data['all_progress_approved'] && !empty($data['progress_reports'])): ?>
-                                    <a href="/extensionist/submissions/create?submission_id=<?= (int)$proposal['id'] ?>&type=terminal" class="btn btn-sm btn-success">
+                                    <a href="/extensionist/submissions/create?submission_id=<?= $proposal['id'] ?>&type=terminal" class="btn btn-sm btn-success">
                                         <i class="fas fa-plus"></i> Submit Terminal
                                     </a>
                                 <?php else: ?>
@@ -188,10 +184,11 @@
                                 <?php endif; ?>
                             <?php else: ?>
                                 <?php if ($data['terminal_report']): ?>
-                                    <span class="badge <?= $statusClass[$data['terminal_report']['status']] ?? 'badge-pending' ?>">
-                                        <?= safe_ucfirst($data['terminal_report']['status']) ?>
+
+                                    <span class="badge <?= $data['terminal_report']['status'] === 'approved' ? 'badge-approved' : ($data['terminal_report']['status'] === 'submitted' ? 'badge-approved' : 'badge-pending') ?>">
+                                        <?= ucfirst($data['terminal_report']['status']) ?>
                                     </span>
-                                    <button class="btn btn-xs btn-edit" onclick="viewReport(<?= (int)$data['terminal_report']['id'] ?>, 'terminal')">
+                                    <button class="btn btn-xs btn-edit" onclick="viewReport(<?= $data['terminal_report']['id'] ?>, 'terminal')">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 <?php else: ?>
@@ -199,6 +196,7 @@
                                 <?php endif; ?>
                             <?php endif; ?>
                         </td>
+
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -213,13 +211,20 @@
             <h3 id="reportModalTitle">Report Details</h3>
             <button class="close-modal" onclick="closeReportModal()">&times;</button>
         </div>
-        <div id="reportModalBody"></div>
+        <div id="reportModalBody">
+            <!-- Content loaded via AJAX -->
+        </div>
     </div>
 </div>
 
 <script>
-    function openProposalModal() { document.getElementById('proposalModal').style.display = 'flex'; }
-    function closeProposalModal() { document.getElementById('proposalModal').style.display = 'none'; }
+    function openProposalModal() {
+        document.getElementById('proposalModal').style.display = 'flex';
+    }
+
+    function closeProposalModal() {
+        document.getElementById('proposalModal').style.display = 'none';
+    }
 
     function selectProposal(id) {
         window.location.href = '/extensionist/submissions/create?proposal_id=' + id + '&type=proposal';
@@ -232,17 +237,28 @@
         modal.style.display = 'flex';
 
         fetch('/extensionist/report-data?id=' + id + '&type=' + type)
-            .then(r => r.text())
-            .then(html => { body.innerHTML = html; })
-            .catch(() => { body.innerHTML = '<p style="color:red;">Error loading report.</p>'; });
+            .then(response => response.text())
+            .then(html => {
+                body.innerHTML = html;
+            })
+            .catch(err => {
+                body.innerHTML = '<p style="color:red;">Error loading report.</p>';
+            });
     }
 
-    function closeReportModal() { document.getElementById('reportModal').style.display = 'none'; }
+    function closeReportModal() {
+        document.getElementById('reportModal').style.display = 'none';
+    }
 
+    // Close modals on outside click
     document.addEventListener('click', function(e) {
-        const pm = document.getElementById('proposalModal');
-        if (e.target === pm) pm.style.display = 'none';
-        const rm = document.getElementById('reportModal');
-        if (e.target === rm) rm.style.display = 'none';
+        const proposalModal = document.getElementById('proposalModal');
+        if (e.target === proposalModal) {
+            proposalModal.style.display = 'none';
+        }
+        const reportModal = document.getElementById('reportModal');
+        if (e.target === reportModal) {
+            reportModal.style.display = 'none';
+        }
     });
 </script>

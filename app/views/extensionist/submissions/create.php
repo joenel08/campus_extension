@@ -28,15 +28,15 @@ $report_type = $report_type ?? 'proposal';
         <input type="hidden" name="submission_id" value="<?= $selected_submission_id ?>">
         <input type="hidden" name="report_type" value="<?= $report_type ?>">
         <input type="hidden" name="status" value="submitted">
-
         <?php if ($report_type === 'proposal'): ?>
             <?php include __DIR__ . '/_proposal_form.php'; ?>
+        <?php elseif ($report_type === 'detailed_proposal'): ?>
+            <?php include __DIR__ . '/_detailed_proposal_form.php'; ?>
         <?php elseif ($report_type === 'progress'): ?>
             <?php include __DIR__ . '/_progress_form.php'; ?>
         <?php elseif ($report_type === 'terminal'): ?>
             <?php include __DIR__ . '/_terminal_form.php'; ?>
         <?php endif; ?>
-
         <div class="submit-area" style="display:flex; gap:15px; justify-content:flex-end; padding:22px; border-top:1px solid #dfe5ec;">
             <!-- <button type="submit" class="submit-paper-btn" style="background:#6c757d; padding:12px 24px;"><i class="fas fa-save"></i> Save Draft</button> -->
             <button type="submit" name="status" value="submitted" class="submit-paper-btn" style="background:#16a34a; padding:12px 24px;" onclick="return confirm('Submit this for review?')">

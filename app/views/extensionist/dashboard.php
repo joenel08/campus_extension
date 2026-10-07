@@ -87,6 +87,8 @@
               <div class="submission-box">
                 <i class="fas fa-file-alt"></i>
                 <h4><?= htmlspecialchars($proposal['title']) ?></h4>
+                <p><?= htmlspecialchars($proposal['description']) ?></p>
+
                 <p>Deadline: <?= date('M d, Y', strtotime($proposal['closing_date'])) ?></p>
                 <a href="/extensionist/submissions/create?proposal_id=<?= $proposal['id'] ?>&type=proposal" class="submit-btn" style="display:inline-block; margin-top:10px;">
                   Submit Now

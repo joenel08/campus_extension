@@ -10,7 +10,8 @@ require_once __DIR__ . '/../../../models/EvaluatorRating.php';
 require_once __DIR__ . '/../../../models/ProgressReport.php';
 require_once __DIR__ . '/../../../models/TerminalReport.php';
 require_once __DIR__ . '/../../../models/Notification.php';
-require_once __DIR__ . '/../../../models/AcademicYear.php'; 
+require_once __DIR__ . '/../../../models/AcademicYear.php';
+require_once __DIR__ . '/../../../models/DetailedProposal.php';
 
 
 
@@ -24,7 +25,8 @@ class MonitoringController extends \Controller
     private $progressReportModel;
     private $terminalReportModel;
     private $notificationModel;
-private $academicYearModel;  
+    private $academicYearModel;
+    private $detailedProposalModel;
     private $db; // store PDO connection
 
     public function __construct()
@@ -44,7 +46,8 @@ private $academicYearModel;
         $this->terminalReportModel = new \TerminalReport($pdo);
         $this->ratingModel = new \EvaluatorRating($pdo);
         $this->notificationModel = new \Notification($pdo);
-        $this->academicYearModel = new \AcademicYear($pdo); 
+        $this->academicYearModel = new \AcademicYear($pdo);
+        $this->detailedProposalModel = new \DetailedProposal($pdo);
     }
 
     public function index()
@@ -88,6 +91,7 @@ private $academicYearModel;
 
             $grouped[$key]['progress_reports'] = $this->progressReportModel->getBySubmission($s['id']);
             $grouped[$key]['terminal_report'] = $this->terminalReportModel->getBySubmission($s['id']);
+            $grouped[$key]['detailed_proposal'] = $this->detailedProposalModel->findBySubmission($s['id']);
         }
 
         $colleges = $this->collegeModel->getAll();
@@ -106,7 +110,8 @@ private $academicYearModel;
         $id = $_POST['id'] ?? 0;
         $remarks = trim($_POST['remarks'] ?? '');
         if ($id) {
-            $this->submissionModel->updateAdminStatus($id, 'pending_evaluation', $remarks);
+            // $this->submissionModel->updateAdminStatus($id, 'pending_evaluation', $remarks);
+            $this->submissionModel->updateAdminStatus($id, 'approved', $remarks);
             $_SESSION['success'] = 'Proposal approved for evaluation.';
 
             // === NOTIFY EXTENSIONIST ===
@@ -241,7 +246,6 @@ private $academicYearModel;
         }
 
         $parentFormData = null;
-        $parentSubmission = null;
 
         if ($type === 'progress') {
             $stmt = $this->db->prepare("
@@ -291,6 +295,21 @@ private $academicYearModel;
             $form_data = [];
             $votes = $this->voteModel->getVotesForSubmission($id, 'terminal');
             $groupedRatings = [];
+        } elseif ($type === 'detailed_proposal') {
+            $dp = $this->detailedProposalModel->find($id);
+            if (!$dp) {
+                $_SESSION['error'] = 'Detailed proposal not found.';
+                header('Location: /admin/monitoring');
+                exit;
+            }
+
+            $parent = $this->submissionModel->find($dp['submission_id']);
+            $parentFormData = $parent ? json_decode($parent['form_data'], true) : null;
+
+            $submission = $dp;
+            $form_data = ['attachment' => $dp['attachment']];
+            $votes = [];
+            $groupedRatings = [];
         } else {
             $submission = $this->submissionModel->find($id);
             if (!$submission) {
@@ -307,14 +326,11 @@ private $academicYearModel;
             foreach ($ratings as $r) {
                 $eid = $r['evaluator_id'];
                 if (!isset($groupedRatings[$eid])) {
-                    $groupedRatings[$eid] = [
-                        'evaluator_name' => $r['evaluator_name'],
-                        'criteria' => []
-                    ];
+                    $groupedRatings[$eid] = ['evaluator_name' => $r['evaluator_name'], 'criteria' => []];
                 }
                 $groupedRatings[$eid]['criteria'][] = [
                     'criteria_text' => $r['criteria_text'],
-                    'rating' => $r['rating']
+                    'rating' => $r['rating'],
                 ];
             }
         }
@@ -394,6 +410,87 @@ private $academicYearModel;
         } else {
             echo '<div class="alert alert-error">No evaluators selected.</div>';
         }
+        exit;
+    }
+
+    public function approveDetailed()
+    {
+        $id = $_POST['id'] ?? 0;
+        $remarks = trim($_POST['remarks'] ?? '');
+        if (!$id) {
+            $_SESSION['error'] = 'Invalid ID.';
+            header('Location: /admin/monitoring');
+            exit;
+        }
+
+        $this->detailedProposalModel->updateAdminStatus($id, 'approved', $remarks);
+
+        $dp = $this->detailedProposalModel->find($id);
+        if ($dp) {
+            $this->notificationModel->create(
+                $dp['user_id'],
+                'detailed_proposal_approved',
+                'Detailed Proposal Approved',
+                'Your detailed proposal has been approved.',
+                '/extensionist/submissions'
+            );
+        }
+        $_SESSION['success'] = 'Detailed proposal approved.';
+        header('Location: /admin/monitoring');
+        exit;
+    }
+
+    public function reviseDetailed()
+    {
+        $id = $_POST['id'] ?? 0;
+        $remarks = trim($_POST['remarks'] ?? '');
+        if (!$id) {
+            $_SESSION['error'] = 'Invalid ID.';
+            header('Location: /admin/monitoring');
+            exit;
+        }
+
+        $this->detailedProposalModel->updateAdminStatus($id, 'revision', $remarks);
+
+        $dp = $this->detailedProposalModel->find($id);
+        if ($dp) {
+            $this->notificationModel->create(
+                $dp['user_id'],
+                'detailed_proposal_revision',
+                'Detailed Proposal Needs Revision',
+                'Your detailed proposal needs revision. Remarks: ' . $remarks,
+                '/extensionist/submissions'
+            );
+        }
+        $_SESSION['success'] = 'Revision requested.';
+        header('Location: /admin/monitoring');
+        exit;
+    }
+
+    public function declineDetailed()
+    {
+        $id = $_POST['id'] ?? 0;
+        $remarks = trim($_POST['remarks'] ?? '');
+        if (!$id) {
+            $_SESSION['error'] = 'Invalid ID.';
+            header('Location: /admin/monitoring');
+            exit;
+        }
+
+        $this->detailedProposalModel->updateAdminStatus($id, 'rejected', $remarks);
+
+        $dp = $this->detailedProposalModel->find($id);
+        if ($dp) {
+            $this->notificationModel->create(
+                $dp['user_id'],
+                'detailed_proposal_rejected',
+                'Detailed Proposal Declined',
+                'Your detailed proposal has been declined. Remarks: ' . $remarks,
+                '/extensionist/submissions'
+            );
+        }
+        $_SESSION['success'] = 'Detailed proposal declined.';
+        header('Location: /admin/monitoring');
         exit;
     }
 }

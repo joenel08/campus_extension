@@ -3,6 +3,7 @@ session_start();
 date_default_timezone_set('Asia/Manila');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+require_once __DIR__ . '/../app/helpers.php';
 
 // Autoloader
 spl_autoload_register(function ($class) {
@@ -192,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+
     // Map POST URLs to controller actions
     $postRoutes = [
 
@@ -254,6 +256,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         '/admin/monitoring/decline' => ['Admin\\MonitoringController', 'decline'],
 
         '/admin/monitoring/assign-evaluators' => ['Admin\\MonitoringController', 'assignEvaluatorStore'],
+
+        '/admin/monitoring/approve-detailed' => ['Admin\\MonitoringController', 'approveDetailed'],
+        '/admin/monitoring/revise-detailed'  => ['Admin\\MonitoringController', 'reviseDetailed'],
+        '/admin/monitoring/decline-detailed' => ['Admin\\MonitoringController', 'declineDetailed'],
         '/evaluator/save-evaluation' => ['Evaluator\\EvaluationController', 'saveEvaluation'],
 
         '/extensionist/submissions/store' => ['Extensionist\\SubmissionController', 'store'],

@@ -7,7 +7,8 @@ require_once __DIR__ . '/../../../models/Proposal.php';
 require_once __DIR__ . '/../../../models/College.php';
 require_once __DIR__ . '/../../../models/ProgressReport.php';
 require_once __DIR__ . '/../../../models/TerminalReport.php';
-require_once __DIR__ . '/../../../models/Notification.php';   // <-- ADD
+require_once __DIR__ . '/../../../models/Notification.php';
+require_once __DIR__ . '/../../../models/DetailedProposal.php';
 
 class SubmissionController extends \ExtensionistBaseController
 {
@@ -18,6 +19,7 @@ class SubmissionController extends \ExtensionistBaseController
     private $terminalReportModel;
     private $notificationModel;   // <-- ADD
     private $uploadDir = 'uploads/submissions/';
+    private $detailedProposalModel;
     private $db;
 
     public function __construct()
@@ -32,7 +34,8 @@ class SubmissionController extends \ExtensionistBaseController
         $this->collegeModel = new \College($pdo);
         $this->progressReportModel = new \ProgressReport($pdo);
         $this->terminalReportModel = new \TerminalReport($pdo);
-        $this->notificationModel = new \Notification($pdo);   // <-- ADD
+        $this->notificationModel = new \Notification($pdo);
+        $this->detailedProposalModel = new \DetailedProposal($pdo);
 
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
@@ -71,6 +74,7 @@ class SubmissionController extends \ExtensionistBaseController
                 'proposal_title'      => $s['proposal_title'] ?? 'N/A',
                 'progress_reports'    => $this->progressReportModel->getBySubmission($sid),
                 'terminal_report'     => $this->terminalReportModel->getBySubmission($sid),
+                'detailed_proposal' => $this->detailedProposalModel->findBySubmission($sid),
                 'all_progress_approved' => true,
             ];
 
@@ -138,6 +142,25 @@ class SubmissionController extends \ExtensionistBaseController
             }
 
             $selected_submission_id = $proposal_id;
+        } elseif ($report_type === 'detailed_proposal') {
+            $submission_id = $_GET['submission_id'] ?? 0;
+            if (!$submission_id) {
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $parent = $this->submissionModel->find($submission_id, $user_id);
+            if (!$parent || $parent['status'] !== 'approved') {
+                $_SESSION['error'] = 'You can only submit a detailed proposal for an approved proposal.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            if ($this->detailedProposalModel->hasDetailedProposal($submission_id)) {
+                $_SESSION['error'] = 'A detailed proposal already exists for this submission.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            $selected_submission_id = $submission_id;
         } else {
             $submission_id = $_GET['submission_id'] ?? 0;
             if (!$submission_id) {
@@ -184,6 +207,29 @@ class SubmissionController extends \ExtensionistBaseController
         $colleges = $this->collegeModel->getAll();
         $user_name = $_SESSION['user_name'] ?? '';
 
+        if ($type === 'detailed_proposal') {
+            $dp = $this->detailedProposalModel->find($id, $user_id);
+            if (!$dp) {
+                $_SESSION['error'] = 'Detailed proposal not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            if ($dp['status'] === 'submitted') {
+                $_SESSION['error'] = 'This detailed proposal is under review and cannot be edited.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $this->render('submissions/edit', [
+                'submission'   => $dp,
+                'form_data'    => ['attachment' => $dp['attachment']],
+                'colleges'     => $colleges,
+                'user_college' => $college_abbr,
+                'user_name'    => $user_name,
+                'report_type'  => 'detailed_proposal',
+            ]);
+            return;
+        }
         if ($type === 'progress') {
             // Fetch progress report
             $stmt = $this->db->prepare("SELECT * FROM progress_reports WHERE id = ? AND user_id = ?");
@@ -449,6 +495,35 @@ class SubmissionController extends \ExtensionistBaseController
                     '/admin/monitoring'
                 );
             }
+        } elseif ($report_type === 'detailed_proposal') {
+            if (!$submission_id) {
+                $_SESSION['error'] = 'Missing parent submission.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            if ($this->detailedProposalModel->hasDetailedProposal($submission_id)) {
+                $_SESSION['error'] = 'A detailed proposal already exists.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+            if (!$attachment) {
+                $_SESSION['error'] = 'Please attach the detailed proposal file.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $this->detailedProposalModel->create($submission_id, $user_id, $attachment, $status, $academic_year_id);
+
+            if ($status === 'submitted') {
+                $adminIds = $this->notificationModel->getAdmins();
+                $this->notificationModel->createBulk(
+                    $adminIds,
+                    'detailed_proposal_submitted',
+                    'New Detailed Proposal',
+                    ($_SESSION['user_name'] ?? 'Unknown') . ' submitted a detailed proposal.',
+                    '/admin/monitoring'
+                );
+            }
         } elseif ($report_type === 'progress') {
             if (!$submission_id) {
                 $_SESSION['error'] = 'Missing parent submission.';
@@ -544,6 +619,25 @@ class SubmissionController extends \ExtensionistBaseController
         $user_id = $_SESSION['user_id'];
         $status = $_POST['status'] ?? 'draft';
 
+        if ($report_type === 'detailed_proposal') {
+            $dp = $this->detailedProposalModel->find($id, $user_id);
+            if (!$dp) {
+                $_SESSION['error'] = 'Detailed proposal not found.';
+                header('Location: /extensionist/submissions');
+                exit;
+            }
+
+            $newAttachment = $dp['attachment'];
+            if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $newAttachment = $this->handleFileUpload($_FILES['attachment'], $dp['attachment']);
+            }
+
+            $this->detailedProposalModel->update($id, $newAttachment, $status);
+
+            $_SESSION['success'] = 'Detailed proposal updated.';
+            header('Location: /extensionist/submissions');
+            exit;
+        }
         // ============ PROGRESS ============
         if ($report_type === 'progress') {
             $stmt = $this->db->prepare("SELECT * FROM progress_reports WHERE id = ? AND user_id = ?");
@@ -667,6 +761,7 @@ class SubmissionController extends \ExtensionistBaseController
     //     $form_data = json_decode($submission['form_data'], true);
     //     $this->render('submissions/show', ['submission' => $submission, 'form_data' => $form_data]);
     // }
+
 
     public function show()
     {
@@ -827,6 +922,50 @@ class SubmissionController extends \ExtensionistBaseController
                         <strong>This report needs revision.</strong>
                         <a href="/extensionist/submissions/edit?id=<?= $id ?>&type=progress" class="btn btn-sm btn-warning" style="margin-top:5px;">
                             Edit &amp; Resubmit
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php
+            return;
+        }
+        if ($type === 'detailed_proposal') {
+            $dp = $this->detailedProposalModel->find($id, $user_id);
+            if (!$dp) {
+                echo '<p style="color:red;">Detailed proposal not found.</p>';
+                return;
+            }
+            $status = $dp['status'];
+        ?>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div><strong>Report Type:</strong> Detailed Proposal</div>
+                <div><strong>Status:</strong>
+                    <span class="badge <?= $status === 'approved' ? 'badge-approved' : ($status === 'submitted' ? 'badge-approved' : 'badge-pending') ?>">
+                        <?= safe_ucfirst($status) ?>
+                    </span>
+                </div>
+                <div><strong>Submitted:</strong> <?= safe_date($dp['created_at'], 'M d, Y H:i') ?></div>
+
+                <?php if (!empty($dp['attachment'])): ?>
+                    <div style="grid-column:1 / span 2; margin-top:10px;">
+                        <strong>Attachment:</strong>
+                        <a href="/<?= htmlspecialchars($dp['attachment']) ?>" target="_blank" class="btn btn-sm btn-primary" style="margin-left:10px;">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($dp['admin_remarks'])): ?>
+                    <div style="grid-column:1 / span 2; background:#fff3cd; padding:10px; border-radius:5px; margin-top:10px;">
+                        <strong>Admin Remarks:</strong> <?= nl2br(htmlspecialchars($dp['admin_remarks'])) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (in_array($status, ['rejected', 'revision'], true)): ?>
+                    <div style="grid-column:1 / span 2; background:#f8d7da; padding:10px; border-radius:5px; margin-top:10px;">
+                        <strong>This detailed proposal needs revision.</strong>
+                        <a href="/extensionist/submissions/edit?id=<?= (int)$id ?>&type=detailed_proposal" class="btn btn-sm btn-warning" style="margin-top:5px;">
+                            Upload &amp; Resubmit
                         </a>
                     </div>
                 <?php endif; ?>

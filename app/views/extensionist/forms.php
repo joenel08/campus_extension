@@ -160,7 +160,7 @@
             ?>
             <div class="form-template-card">
                 <div class="template-title"><?= htmlspecialchars($t['title']) ?></div>
-                <div class="template-code">Template Code: <?= htmlspecialchars($t['template_code']) ?></div>
+                <!-- <div class="template-code">Template Code: <?= htmlspecialchars($t['template_code']) ?></div> -->
                 <div class="template-desc"><?= htmlspecialchars($t['description'] ?? '') ?></div>
 
                 <div class="template-file">

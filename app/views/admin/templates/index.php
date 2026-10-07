@@ -23,7 +23,7 @@
             <tr>
                 <th>#</th>
                 <th>Title</th>
-                <th>Template Code</th>
+                <!-- <th>Template Code</th> -->
                 <th>Description</th>
                 <th>File</th>
                 <th>Status</th>
@@ -38,7 +38,7 @@
                     <tr>
                         <td><?= $i + 1 ?></td>
                         <td><strong><?= htmlspecialchars($t['title']) ?></strong></td>
-                        <td><?= htmlspecialchars($t['template_code']) ?></td>
+                        <!-- <td><?= htmlspecialchars($t['template_code']) ?></td> -->
                         <td><?= htmlspecialchars($t['description'] ?? '') ?></td>
                         <td>
                             <?php if (!empty($t['attached_file'])): ?>
@@ -96,10 +96,10 @@
                 <input type="text" name="title" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;" required>
             </div>
 
-            <div style="margin-bottom:15px;">
+            <!-- <div style="margin-bottom:15px;">
                 <label style="font-weight:600;">Template Code</label>
                 <input type="text" name="template_code" class="form-input" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;" placeholder="e.g., 25-c34a7" required>
-            </div>
+            </div> -->
 
             <div style="margin-bottom:15px;">
                 <label style="font-weight:600;">Description</label>
