@@ -10,7 +10,7 @@
 <div class="card">
     <div class="table-header">
         <h2><i class="fas fa-tasks"></i> Assigned Proposals for Evaluation</h2>
-        <p class="table-subtitle">Evaluate the proposal, progress reports, and terminal report</p>
+        <p class="table-subtitle">Evaluate the detailed proposal, progress reports, and terminal report</p>
     </div>
 
     <?php if (empty($grouped)): ?>
@@ -21,7 +21,7 @@
                 <tr>
                     <th>Proposal Title</th>
                     <th>Extensionist</th>
-                    <th>Proposal</th>
+                    <th>Detailed Proposal</th>
                     <th>Progress Reports</th>
                     <th>Terminal Report</th>
                 </tr>
@@ -32,24 +32,32 @@
                         <td><strong><?= htmlspecialchars($data['proposal_title']) ?></strong></td>
                         <td><?= htmlspecialchars($data['extensionist_name']) ?></td>
 
-                        <!-- Proposal -->
-                        <td>
-                            <?php if ($data['proposal_evaluated']): ?>
-                                <span class="badge <?= $data['proposal_vote'] === 'approve' ? 'badge-approved' : ($data['proposal_vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
-                                    <?= ucfirst($data['proposal_vote']) ?>
-                                </span>
-                                <a href="/evaluator/evaluate?id=<?= $data['submission_id'] ?>&type=proposal" class="btn btn-sm btn-edit">
-                                    <i class="fas fa-eye"></i> 
-                                </a>
-                            <?php else: ?>
-                                <span class="badge badge-pending">Pending</span>
-                                <a href="/evaluator/evaluate?id=<?= $data['submission_id'] ?>&type=proposal" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-pen"></i> Evaluate
-                                </a>
-                            <?php endif; ?>
-                        </td>
+                       <!-- DETAILED PROPOSAL -->
+<td>
+    <?php $dp = $data['detailed_proposal'] ?? null; ?>
+    <?php if (!$dp): ?>
+        <span class="badge badge-pending">Awaiting upload</span>
+    <?php elseif (!in_array($dp['status'], ['approved','submitted'], true)): ?>
+        <span class="badge badge-pending"><?= safe_ucfirst($dp['status']) ?></span>
+    <?php else: ?>
+        <?php $vote = $data['detailed_vote'] ?? null; ?>
+        <?php if ($vote): ?>
+            <span class="badge <?= $vote['vote'] === 'approve' ? 'badge-approved' : ($vote['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
+                <?= safe_ucfirst($vote['vote']) ?>
+            </span>
+            <a href="/evaluator/evaluate?id=<?= (int)$dp['id'] ?>&type=detailed_proposal" class="btn btn-sm btn-edit">
+                <i class="fas fa-eye"></i>
+            </a>
+        <?php else: ?>
+            <span class="badge badge-pending">Pending</span>
+            <a href="/evaluator/evaluate?id=<?= (int)$dp['id'] ?>&type=detailed_proposal" class="btn btn-sm btn-primary">
+                <i class="fas fa-pen"></i> Evaluate
+            </a>
+        <?php endif; ?>
+    <?php endif; ?>
+</td>
 
-                        <!-- Progress Reports -->
+                        <!-- PROGRESS REPORTS -->
                         <td>
                             <?php if (!empty($data['progress_reports'])): ?>
                                 <?php foreach ($data['progress_reports'] as $idx => $pr): ?>
@@ -59,12 +67,12 @@
                                             <span class="badge <?= $pr['vote'] === 'approve' ? 'badge-approved' : ($pr['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
                                                 <?= ucfirst($pr['vote']) ?>
                                             </span>
-                                            <a href="/evaluator/evaluate?id=<?= $pr['id'] ?>&type=progress" class="btn btn-sm btn-edit">
+                                            <a href="/evaluator/evaluate?id=<?= (int)$pr['id'] ?>&type=progress" class="btn btn-sm btn-edit">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         <?php else: ?>
                                             <span class="badge badge-pending">Pending</span>
-                                            <a href="/evaluator/evaluate?id=<?= $pr['id'] ?>&type=progress" class="btn btn-sm btn-primary">
+                                            <a href="/evaluator/evaluate?id=<?= (int)$pr['id'] ?>&type=progress" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-pen"></i> Evaluate
                                             </a>
                                         <?php endif; ?>
@@ -75,7 +83,7 @@
                             <?php endif; ?>
                         </td>
 
-                        <!-- Terminal Report -->
+                        <!-- TERMINAL REPORT -->
                         <td>
                             <?php if ($data['terminal_report']): ?>
                                 <?php $term = $data['terminal_report']; ?>
@@ -84,12 +92,12 @@
                                         <span class="badge <?= $term['vote'] === 'approve' ? 'badge-approved' : ($term['vote'] === 'revision' ? 'badge-pending' : 'badge-declined') ?>">
                                             <?= ucfirst($term['vote']) ?>
                                         </span>
-                                        <a href="/evaluator/evaluate?id=<?= $term['id'] ?>&type=terminal" class="btn btn-sm btn-edit">
+                                        <a href="/evaluator/evaluate?id=<?= (int)$term['id'] ?>&type=terminal" class="btn btn-sm btn-edit">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     <?php else: ?>
                                         <span class="badge badge-pending">Pending</span>
-                                        <a href="/evaluator/evaluate?id=<?= $term['id'] ?>&type=terminal" class="btn btn-sm btn-primary">
+                                        <a href="/evaluator/evaluate?id=<?= (int)$term['id'] ?>&type=terminal" class="btn btn-sm btn-primary">
                                             <i class="fas fa-pen"></i> Evaluate
                                         </a>
                                     <?php endif; ?>

@@ -23,3 +23,7 @@ CREATE TABLE `detailed_proposals` (
   CONSTRAINT `fk_dp_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_dp_ay` FOREIGN KEY (`academic_year_id`) REFERENCES `academic_years` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+
+ALTER TABLE evaluator_votes
+    MODIFY COLUMN report_type ENUM('proposal','progress','terminal','detailed_proposal') NOT NULL;
