@@ -290,7 +290,7 @@ class Submission
     // ==================== USER COUNTS (with academic year) ====================
     public function countProposalsByUser($user_id, $academic_year_id = null)
     {
-        $sql = "SELECT COUNT(*) FROM submissions WHERE user_id = ? AND report_type = 'proposal'";
+        $sql = "SELECT COUNT(*) FROM submissions WHERE user_id = ? AND report_type = 'detailed_proposal'";
         $params = [$user_id];
 
         if ($academic_year_id) {
@@ -422,6 +422,35 @@ class Submission
           )
     ";
         $params = [];
+
+        if ($academic_year_id) {
+            $sql .= " AND s.academic_year_id = ?";
+            $params[] = $academic_year_id;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchColumn();
+    }
+
+    // On-going = user's proposal has progress report(s) AND no terminal report
+    public function countOngoingByUser($user_id, $academic_year_id = null)
+    {
+        $sql = "
+        SELECT COUNT(DISTINCT s.id)
+        FROM submissions s
+        WHERE s.user_id = ?
+          AND s.report_type = 'proposal'
+          AND EXISTS (
+              SELECT 1 FROM progress_reports pr 
+              WHERE pr.submission_id = s.id
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM terminal_reports tr 
+              WHERE tr.submission_id = s.id
+          )
+    ";
+        $params = [$user_id];
 
         if ($academic_year_id) {
             $sql .= " AND s.academic_year_id = ?";

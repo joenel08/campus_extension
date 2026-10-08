@@ -38,7 +38,7 @@ public function index()
     }
 
     $total     = $this->submissionModel->countProposalsByUser($user_id);
-    $pending   = $this->submissionModel->countPendingByUser($user_id);
+    $pending   = $this->submissionModel->countOngoingByUser($user_id);
     $completed = $this->submissionModel->countCompletedByUser($user_id);
 
     // You still need $currentUser for the profile modal / hero
